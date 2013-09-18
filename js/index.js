@@ -1,111 +1,111 @@
 //Module for input checking and parsing
-var Worker = (function() {
-  var w={};
+var XCalc = (function() {
+  var worker={};
 
-  //Divides input up into Sections and Singles
-  w.parse = function(value) {
-    if (!value) return 0;
-    
-    var sections = [];
-    
-    //Remove excess whitespace
-    value.replace(/\s/g, '');
+  //removes unnecessary brackets around a string
+  worker.removeBrackets = function(value) {
+    if (!value) return "";
 
-    //get rid of unnecessary brackets surrounding the section
+    //While there are brackets around the string
     while (value.substr(0, 1)=="(" && value.substr(value.length-1, 1)==")") {
       var openBrackets=1;
+
+      //See if the end bracket closes the opening bracket or not
       for (var i=1; i<value.length&&openBrackets>0; i++) {
         if (value.substr(i, 1)=="(") openBrackets++;
         if (value.substr(i, 1)==")") openBrackets--;
       }
       i-=1;
+
+      //If it corresponds to different brackets, do nothing
       if (openBrackets!=0 || i!=value.length-1) {
         break;
+
+      //Otherwise, remove the brackets, continue loop to see if there are more
       } else {
         value=value.substring(1, value.length-1);
       }
     }
-    
-    var addition = value.lastIndexOf("+");
-    var subtraction = value.lastIndexOf("-");
-    var multiplication = value.lastIndexOf("*");
-    var division = value.lastIndexOf("/");
-    var exponent = value.indexOf("^");
-    var bracket1 = value.lastIndexOf("(");
 
-    /* make sure we pick out operators that AREN'T IN BRACKETS
-    by checking if the signs are in brackets and searching
-    again if they are */
-    var redos=[0, 0, 0, 0, 0, 0];
-    if (addition==-1) redos[0]=1;
-    if (subtraction==-1) redos[1]=1;
-    if (multiplication==-1) redos[2]=1;
-    if (division==-1) redos[3]=1;
-    if (exponent==-1) redos[4]=1;
-    if (bracket1==-1) redos[5]=1;
-    while (redos[0]==0 || redos[1]==0 || redos[2]==0 || redos[3]==0 || redos[4]==0 || redos[5]==0) {
+    return value;
+  }
+
+  //finds the last occurrence of an operator that is not in brackets
+  worker.findLast = function(operator, value) {
+
+    //Keep searching for the next last sign if the one found is within brackets
+    var inBrackets=true;
+    var index=-1;
+    if (operator!="^") {
+      index=value.lastIndexOf(operator)
+    } else {
+      index=value.indexOf(operator); //Look for the first instead of last if it's an exponent
+    }
+
+    while (inBrackets) {
       var openBrackets=0;
+
+      //Find how many brackets are opened or closed at a given point in the string
       for (var i=0; i<value.length; i++) {
         if (value.substr(i, 1)=="(") {
-          if (i==bracket1) {
-            if (openBrackets>0) {
-              bracket1 = value.substring(0, bracket1).lastIndexOf("(");
-            } else {
-              redos[5]=1;
-            }
-          }
           openBrackets++;
         } else if (value.substr(i, 1)==")") {
           openBrackets--;
-        } else if (i==addition) {
-          if (openBrackets>0) {
-            addition = value.substring(0, addition).lastIndexOf("+");
+        }
+
+        if (i==index) {
+
+          //If no brackets are open, break the loop.
+          if (openBrackets==0 || (openBrackets==1 && operator=="(")) {
+            inBrackets=false;
+            break;
+
+          //Otherwise, find the next operator, and loop through again to see if that one is in brackets
           } else {
-            redos[0]=1;
-          }
-        } else if (i==subtraction) {
-          if (openBrackets>0) {
-            subtraction = value.substring(0, subtraction).lastIndexOf("-");
-          } else {
-            redos[1]=1;
-          }
-        } else if (i==multiplication) {
-          if (openBrackets>0) {
-            multiplication = value.substring(0, multiplication).lastIndexOf("*");
-          } else {
-            redos[2]=1;
-          }
-        } else if (i==division) {
-          if (openBrackets>0) {
-            division = value.substring(0, division).lastIndexOf("/");
-          } else {
-            redos[3]=1;
-          }
-        } else if (i==exponent) {
-          if (openBrackets>0) {
-            var nextExponent = value.substring(exponent+1).indexOf("^");
-            if (nextExponent==-1) {
-              exponent=-1;
+            if (operator!="^") {
+              index = value.substring(0, index).lastIndexOf(operator);
             } else {
-              exponent = (exponent+1+value.substring(exponent+1).indexOf("^"));
+              var nextOperator = value.substring(index+1).indexOf(operator);
+              if (nextOperator==-1) {
+                index=-1;
+              } else {
+                index = (index+1+value.substring(index+1).indexOf(operator));
+              }
             }
-          } else {
-            redos[4]=1;
           }
         }
       }
 
-      if (addition==-1) redos[0]=1;
-      if (subtraction==-1) redos[1]=1;
-      if (multiplication==-1) redos[2]=1;
-      if (division==-1) redos[3]=1;
-      if (exponent==-1) redos[4]=1;
-      if (bracket1==-1) redos[5]=1;
+      //If no more operators are found, break the loop
+      if (index==-1) {
+        inBrackets=false;
+      }
     }
+    return index;
+  };
 
-    console.log(value);
 
-    //reverse BEDMAS
+  //Divides input up into Sections and Singles
+  worker.parse = function(value) {
+    if (!value) return 0;
+    
+    var sections = [];
+    
+    //Remove excess whitespace
+    value = value.replace(/\s/g, '');
+
+    //get rid of unnecessary brackets surrounding the section
+    value = this.removeBrackets(value);
+    
+    //Find the last instance of each operator in the string
+    var addition = this.findLast("+", value);
+    var subtraction = this.findLast("-", value);
+    var multiplication = this.findLast("*", value);
+    var division = this.findLast("/", value);
+    var exponent = this.findLast("^", value); //Find the first exponent, since those work in reverse
+    var bracket1 = this.findLast("(", value);
+
+    //Push back each half of the equation into a section, in reverse order of operations
     if (addition != -1 && (subtraction == -1 || addition>subtraction)) {
       sections.push(new Segment(value.substring(0, addition)));
       sections.push(new Single(value.substring(addition, addition+1), "operator"));
@@ -141,6 +141,8 @@ var Worker = (function() {
         console.log("Brackets nesting error: " + value);
         return 0;
       }
+
+    //If there are no operators, just push the value itself
     } else {
       sections.push(new Single(value, "value"));
     }
@@ -149,7 +151,7 @@ var Worker = (function() {
   };
 
   //Checks to see if brackets are properly nested in a string
-  w.properBrackets = function(value) {
+  worker.properBrackets = function(value) {
     var openBrackets=0;
     for (var i=0; i<value.length; i++) {
       if (value.substr(i, 1)=="(") openBrackets++;
@@ -158,7 +160,16 @@ var Worker = (function() {
     return openBrackets==0;
   };
 
-  return w;
+  //Creates a new Section for an expression
+  worker.createExpression = function(value) {
+    if (this.properBrackets(value)) {
+      return new Segment(value);
+    } else {
+      return 0;
+    }
+  }
+
+  return worker;
 }());
 
 //Class for a single number or operator
@@ -190,7 +201,7 @@ function Single(value, type) {
 
 //Class for a segment of math (a container)
 function Segment(value) {
-  this.sections = value?Worker.parse(value):[];
+  this.sections = value?XCalc.parse(value):[];
   this.type = "section";
   
   //Recursively solve children
@@ -252,7 +263,7 @@ function Segment(value) {
 
 function simplifyText(event) {
   var input = document.getElementById("input").value;
-  if (Worker.properBrackets(input)) {
+  if (XCalc.properBrackets(input)) {
     document.getElementById("wrapper").className="";
     var timer = setTimeout(function() {
       var expression = new Segment(input);
