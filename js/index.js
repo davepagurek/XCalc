@@ -1,11 +1,10 @@
 function simplifyText(event) {
   var input = document.getElementById("input").value;
-  var variable = parseFloat(document.getElementById("variable").value);
   if (XCalc.properBrackets(input)) {
     document.getElementById("wrapper").className="";
     var timer = setTimeout(function() {
-      var expression = XCalc.createExpression(input);
-      document.getElementById("result").innerHTML = "<div class='final answer'>= " + expression.result(variable) + "</div>";
+      document.getElementById("result").innerHTML = "";
+      document.getElementById("result").appendChild(XCalc.graphExpression(input));
       document.getElementById("wrapper").className="solved";
     }, 800);
   } else {

@@ -1,29 +1,3 @@
-//Module for input checking and parsing
-var XCalc = (function() {
-  var worker={};
-
-  //Checks to see if brackets are properly nested in a string
-  worker.properBrackets = function(value) {
-    var openBrackets=0;
-    for (var i=0; i<value.length; i++) {
-      if (value.substr(i, 1)=="(") openBrackets++;
-      if (value.substr(i, 1)==")") openBrackets--;
-    }
-    return openBrackets===0;
-  };
-
-  //Creates a new Section for an expression
-  worker.createExpression = function(value) {
-    if (this.properBrackets(value)) {
-      return new Segment(value);
-    } else {
-      return 0;
-    }
-  };
-
-  return worker;
-}());
-
 //Class for 
 function Operator(input) {
   this.operator = input;
@@ -241,7 +215,6 @@ function Segment(input) {
         if (xLocation!=-1) {
           if (xLocation>0) {
             this.sections.push(new Segment(input.substring(0, xLocation)));
-            console.log(input.substring(0, xLocation));
             this.sections.push(new Segment("x"));
             this.operator=new Operator("*");
           } else {
@@ -261,3 +234,137 @@ function Segment(input) {
     console.log("Segment has no input.");
   }
 }
+
+
+//One point on a graph
+function Point(x, y) {
+  this.x = x || 0;
+  this.y = y || 0;
+}
+
+
+//Function to create graphs
+function Graph(value, accuracy, x1, x2) {
+  this.expression = new Segment(value);
+  this.points = [];
+  this.accuracy = accuracy || 0.5;
+  this.canvas = document.createElement("canvas");
+  this.canvas.width=400;
+  this.canvas.height=400;
+  this.min;
+  this.max;
+  var stage=0;
+
+  this.getMin = function() {
+    if (this.min==undefined) {
+      if (this.points.length>0) {
+        var min = this.points[0].y;
+        for (var i=1; i<this.points.length; i++) {
+          if (this.points[i].y<min) min = this.points[i].y;
+        }
+        this.min=min;
+        return min;
+      } else {
+        return 0;
+      }
+    } else {
+      return this.min;
+    }
+  };
+
+  this.getMax = function() {
+    if (this.max==undefined) {
+      if (this.points.length>0) {
+        var max = this.points[0].y;
+        for (var i=1; i<this.points.length; i++) {
+          if (this.points[i].y>max) max = this.points[i].y;
+        }
+        this.max=max;
+        return max;
+      } else {
+        return 0;
+      }
+    } else {
+      return this.max;
+    }
+  };
+
+  this.redraw = function() {
+    stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    stage.strokeStyle="#000000";
+    stage.lineWidth=1;
+    stage.lineCap="round";
+
+
+    //NOTE TO SELF: NEGATIVE NUMBERS IN MIN AND MAX ARE PROBLEMS
+
+
+    if (this.points.length>1) {
+      stage.moveTo(0, (this.points[0].y/(this.getMax()-this.getMin()))*this.canvas.height);
+      for (var i=1; i<this.points.length; i++) {
+        stage.lineTo((i/this.points.length)*this.canvas.width, (this.points[i].y/(this.getMax()-this.getMin()))*this.canvas.height);
+        stage.stroke();
+        stage.moveTo((i/this.points.length)*this.canvas.width, (this.points[i].y/(this.getMax()-this.getMin()))*this.canvas.height);
+      }
+    } else {
+      console.log("Not enough points to graph.");
+    }
+  };
+
+  this.getCanvas = function() {
+    return this.canvas;
+  };
+
+  if (this.canvas.getContext) {
+    //Get the canvas context to draw onto
+    stage = this.canvas.getContext("2d");
+    this.canvas.style.backgroundColor="#FFF";
+
+    if (!x1) x1=-10;
+    if (!x2) x2=10;
+
+    for (var i=x1; i<=x2; i+=this.accuracy) {
+      this.points.push(new Point(i, this.expression.result(i)));
+    }
+
+    console.log(this.getMin() + " to " + this.getMax());
+
+    this.redraw();
+
+  } else {
+    console.log("Canvas not supported in this browser.");
+    canvas = document.createElement("div");
+    canvas.innerHTML="Canvas is not supported in this browser.";
+  }
+}
+
+//Module for input checking and parsing
+var XCalc = (function() {
+  var worker={};
+
+  //Checks to see if brackets are properly nested in a string
+  worker.properBrackets = function(value) {
+    var openBrackets=0;
+    for (var i=0; i<value.length; i++) {
+      if (value.substr(i, 1)=="(") openBrackets++;
+      if (value.substr(i, 1)==")") openBrackets--;
+    }
+    return openBrackets===0;
+  };
+
+  //Creates a new Section for an expression
+  worker.createExpression = function(value) {
+    if (this.properBrackets(value)) {
+      return new Segment(value);
+    } else {
+      return 0;
+    }
+  };
+
+  worker.graphExpression = function(value) {
+    var graph = new Graph(value);
+    return graph.getCanvas();
+  };
+
+  return worker;
+}());
