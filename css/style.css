@@ -59,6 +59,15 @@ input[type="text"] {
   clear:both;
   text-align:center;
 }
+.group {
+  padding:5px;
+  margin:5px;
+  border:1px solid #FFF;
+  display:inline-block;
+}
+.group.operator {
+  border:0;
+}
 .final {
   color:#FFF;
   font-size:60px;

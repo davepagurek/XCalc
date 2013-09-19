@@ -29,20 +29,27 @@ function Operator(input) {
   this.operator = input;
   if (!input) {
     console.log("Operator has no input.");
-    this=0;
   }
 
-  this.solve = function(segment1, segment2) {
+  this.solve = function(segment1, segment2, x) {
+    var v1 = segment1.coefficient;
+    if (segment1.type==variable) {
+      v1 = x;
+    }
+    var v2 = segment2.coefficient;
+    if (segment2.type==variable) {
+      v2 = x;
+    }
     if (this.operator=="+") {
-      return new Segment(segment1.coefficient + segment2.coefficient);
+      return new Segment(v1 + v2);
     } else if (this.operator=="-") {
-      return  new Segment(segment1.coefficient - segment2.coefficient);
+      return  new Segment(v1 - v2);
     } else if  (this.operator=="*") {
-      return  new Segment(segment1.coefficient * segment2.coefficient);
+      return  new Segment(v1 * v2);
     } else if (this.operator=="/") {
-      return  new Segment(segment1.coefficient / segment2.coefficient);
+      return  new Segment(v1 / v2);
     } else if (this.operator=="^") {
-      return  new Segment(Math.pow(segment1.coefficient, segment2.coefficient));
+      return  new Segment(Math.pow(v1, v2));
     }
   };
 }
@@ -52,7 +59,6 @@ function Segment(input) {
   this.sections = [];
   this.type="section";
   this.operator=0;
-  this.degree=-1;
   this.coefficient=0;
   this.variable="";
 
@@ -137,27 +143,46 @@ function Segment(input) {
   };
 
   //Recursively solve children
-  this.solve = function() {
+  this.solve = function(x) {
+    if (!x) x=0;
     if (this.type=="value") {
       return this;
+    } else if (this.type=="variable") {
+      return new Segment(x);
     } else {
       if (this.sections.length==1) {
-        return this.sections[0].solve();
+        return this.sections[0].solve(x);
       } else if (this.sections.length==2) {
-        return this.operator.solve(this.sections[0].solve(), this.sections[1].solve());
+        return this.operator.solve(this.sections[0].solve(x), this.sections[1].solve(x), x);
       }
     }
   };
 
   //Outputs the final answer
-  this.result = function() {
-    return this.solve().coefficient;
+  this.result = function(x) {
+    return this.solve(x).coefficient;
+  };
+
+  this.display = function(x) {
+    if (this.type=="value") return this.coefficient;
+    if (this.type=="variable") return x;
+    var str = "<div class='group'>";
+    for (var i=0; i<this.sections.length; i++) {
+      str+=this.sections[i].display(x);
+      if (i==0 && this.operator) {
+        str+="<div class='group operator'>" + this.operator.operator + "</div>";
+      }
+    }
+    str+="<div class='answer'>= " + this.solve().coefficient + "</div>";
+    str+="</div>";
+    return str;
   };
 
 
 
   //constructor
   if (input) {
+    console.log(input);
     if (typeof(input)=="string") {
       //Remove excess whitespace
       input = input.replace(/\s/g, '');
@@ -212,8 +237,21 @@ function Segment(input) {
 
       //If there are no operators, just push the input itself
       } else {
-        this.coefficient = parseFloat(input);
-        this.type = "value";
+        var xLocation=input.indexOf("x");
+        if (xLocation!=-1) {
+          if (xLocation>0) {
+            this.sections.push(new Segment(input.substring(0, xLocation)));
+            console.log(input.substring(0, xLocation));
+            this.sections.push(new Segment("x"));
+            this.operator=new Operator("*");
+          } else {
+            this.variable="x";
+            this.type="variable";
+          }
+        } else {
+          this.coefficient = parseFloat(input);
+          this.type = "value";
+        }
       }
     } else if (typeof(input)=="number") {
       this.coefficient = input;
@@ -221,6 +259,5 @@ function Segment(input) {
     }
   } else {
     console.log("Segment has no input.");
-    this=0;
   }
 }
