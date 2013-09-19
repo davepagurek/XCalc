@@ -9,7 +9,7 @@ var XCalc = (function() {
       if (value.substr(i, 1)=="(") openBrackets++;
       if (value.substr(i, 1)==")") openBrackets--;
     }
-    return openBrackets==0;
+    return openBrackets===0;
   };
 
   //Creates a new Section for an expression
@@ -19,7 +19,7 @@ var XCalc = (function() {
     } else {
       return 0;
     }
-  }
+  };
 
   return worker;
 }());
@@ -33,11 +33,11 @@ function Operator(input) {
 
   this.solve = function(segment1, segment2, x) {
     var v1 = segment1.coefficient;
-    if (segment1.type==variable) {
+    if (segment1.type=="variable") {
       v1 = x;
     }
     var v2 = segment2.coefficient;
-    if (segment2.type==variable) {
+    if (segment2.type=="variable") {
       v2 = x;
     }
     if (this.operator=="+") {
@@ -77,7 +77,7 @@ function Segment(input) {
       i-=1;
 
       //If it corresponds to different brackets, do nothing
-      if (openBrackets!=0 || i!=value.length-1) {
+      if (openBrackets!==0 || i!=value.length-1) {
         break;
 
       //Otherwise, remove the brackets, continue loop to see if there are more
@@ -95,7 +95,7 @@ function Segment(input) {
     var inBrackets=true;
     var index=-1;
     if (operator!="^") {
-      index=value.lastIndexOf(operator)
+      index=value.lastIndexOf(operator);
     } else {
       index=value.indexOf(operator); //Look for the first instead of last if it's an exponent
     }
@@ -114,7 +114,7 @@ function Segment(input) {
         if (i==index) {
 
           //If no brackets are open, break the loop.
-          if (openBrackets==0 || (openBrackets==1 && operator=="(")) {
+          if (openBrackets===0 || (openBrackets==1 && operator=="(")) {
             inBrackets=false;
             break;
 
@@ -169,7 +169,7 @@ function Segment(input) {
     var str = "<div class='group'>";
     for (var i=0; i<this.sections.length; i++) {
       str+=this.sections[i].display(x);
-      if (i==0 && this.operator) {
+      if (i===0 && this.operator) {
         str+="<div class='group operator'>" + this.operator.operator + "</div>";
       }
     }
@@ -185,7 +185,7 @@ function Segment(input) {
     console.log(input);
     if (typeof(input)=="string") {
       //Remove excess whitespace
-      input = input.replace(/\s/g, '');
+      input = input.replace(/\s/g, "");
 
       //get rid of unnecessary brackets surrounding the section
       input = removeBrackets(input);
@@ -225,7 +225,7 @@ function Segment(input) {
           if (input.substr(i, 1)=="(") openBrackets++;
           if (input.substr(i, 1)==")") openBrackets--;
         }
-        if (openBrackets==0) {
+        if (openBrackets===0) {
           var bracket2=i-1;
           if (bracket1>0) this.sections.push(new Segment(input.substring(0, bracket1)));
           if (bracket2-bracket1!=1) this.sections.push(new Segment(input.substring(bracket1+1, bracket2)));
