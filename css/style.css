@@ -55,18 +55,6 @@ input[type="text"] {
   padding:20px;
   color:#FFF;
 }
-.box {
-  color:#000;
-  padding:5px;
-  margin:5px;
-  float:left;
-  display:inline-block;
-  border:5px solid #DDD;
-  background-color:#FFF;
-}
-.display > .box {
-  margin: 5px 10px 5px 0;
-}
 .answer {
   clear:both;
   text-align:center;
@@ -76,40 +64,6 @@ input[type="text"] {
   font-size:60px;
   text-align:left;
   font-family: 'Open Sans', sans-serif;
-}
-.group {
-  font-family: 'Open Sans', sans-serif;
-  display:inline-block;
-  vertical-align:inherit;
-  text-align:center;
-  margin:1px 1px 0 0;
-  padding:0;
-}
-.middle {
-  vertical-align:middle;
-}
-.brackets:before {
-  content:"(";
-}
-.brackets:after {
-  content:")";
-}
-.group[val="^"], .group[val="^"]+.group {
-  font-size: 0.7em;
-  vertical-align:super;
-}
-.group[val="/"], .group[val="/"]+.group {
-  clear:both;
-  display:block;
-}
-.group[val="/"]+.group {
-  border-top:1px solid #FFF;
-}
-.group[val="*"], .group[val="+"], .group[val="-"] {
-  padding:0 3px;
-}
-.display {
-  margin-top:10px;
 }
 .error {
   background-color:#6B1010;
