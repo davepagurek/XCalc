@@ -3,7 +3,7 @@ Mathematical Expression Calculator by Dave Pagurek
 
 <h2>Usage</h2>
 Add the following to your head tag:
-```javascript
+```HTML
 <script src="js/XCalc.js"></script>
 ```
 
