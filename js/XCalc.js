@@ -1,4 +1,4 @@
-//Class for 
+//Class for operators
 function Operator(input) {
   this.operator = input;
   if (!input) {
@@ -116,6 +116,69 @@ function Segment(input) {
     return index;
   };
 
+  //Specifically for finding brackets that can be used for multiplication
+  var findMultiplicationBrackets = function(value) {
+
+    //Keep searching for the next last sign if the one found is within brackets
+    var inBracketsOpen=true;
+    var inBracketsClosed=true;
+    var indexOpen=-1;
+    var indexClosed=-1;
+    var operators="+-/*^";
+    
+    indexOpen=value.lastIndexOf("(");
+    indexClosed=value.lastIndexOf(")");
+
+    while (inBracketsOpen || inBracketsClosed) {
+      var openBrackets=0;
+
+      //Find how many brackets are opened or closed at a given point in the string
+      for (var i=0; i<value.length; i++) {
+        if (value.substr(i, 1)=="(") {
+          openBrackets++;
+        } else if (value.substr(i, 1)==")") {
+          openBrackets--;
+        }
+
+        if (i==indexOpen && inBracketsOpen) {
+
+          if (openBrackets==1 && i!==0 && operators.indexOf(value.substr(i-1, 1))==-1) {
+            inBracketsOpen=false;
+
+          //Otherwise, find the next operator, and loop through again to see if that one is in brackets
+          } else {
+            indexOpen = value.substring(0, indexOpen).lastIndexOf("(");
+          }
+        }
+
+        if (i==indexClosed && inBracketsClosed) {
+
+          if (openBrackets===0 && i<value.length-1 && operators.indexOf(value.substr(i+1, 1))==-1) {
+            inBracketsClosed=false;
+
+          //Otherwise, find the next operator, and loop through again to see if that one is in brackets
+          } else {
+            indexClosed = value.substring(0, indexClosed).lastIndexOf(")");
+          }
+        }
+      }
+
+      //If no more operators are found, break the loop
+      if (indexOpen==-1) {
+        inBracketsOpen=false;
+      }
+      if (indexClosed==-1) {
+        inBracketsClosed=false;
+      }
+    }
+
+    if (indexClosed>indexOpen && indexClosed!=-1) {
+      return indexClosed;
+    } else {
+      return indexOpen;
+    }
+  };
+
   //Recursively solve children
   this.solve = function(x) {
     if (!x) x=0;
@@ -155,8 +218,7 @@ function Segment(input) {
 
 
   //constructor
-  if (input) {
-    console.log(input);
+  if (input!==undefined) {
     if (typeof(input)=="string") {
       //Remove excess whitespace
       input = input.replace(/\s/g, "");
@@ -167,7 +229,9 @@ function Segment(input) {
       //Find the last instance of each operator in the string
       var addition = findLast("+", input);
       var subtraction = findLast("-", input);
-      var multiplication = findLast("*", input);
+      var multiplication1 = findLast("*", input);
+      var multiplication2 = findMultiplicationBrackets(input); //Find brackets that are the same as multiplication
+      var multiplication = (multiplication1>multiplication2)?multiplication1:multiplication2;
       var division = findLast("/", input);
       var exponent = findLast("^", input); //Find the first exponent, since those work in reverse
       var bracket1 = findLast("(", input);
@@ -254,6 +318,7 @@ function Graph(value, x1, x2) {
   this.max=undefined;
   var stage=0;
 
+  //Gets minimum y value in the set of points
   this.getMin = function() {
     if (this.min===undefined) {
       if (this.points.length>0) {
@@ -271,6 +336,7 @@ function Graph(value, x1, x2) {
     }
   };
 
+  //Gets maximum y value in the set of points
   this.getMax = function() {
     if (this.max===undefined) {
       if (this.points.length>0) {
@@ -288,50 +354,78 @@ function Graph(value, x1, x2) {
     }
   };
 
+  this.setPoints = function(x1, x2) {
+    if (!x1) x1=-10;
+    if (!x2) x2=10;
+
+    var accuracy = (x2-x1)/this.canvas.width;
+    this.points = [];
+    for (var i=x1; i<=x2; i+=accuracy) {
+      this.points.push(new Point(i, this.expression.result(i)));
+    }
+
+    this.redraw();
+  };
+
+  //Updates the canvas
   this.redraw = function() {
-    stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    stage.strokeStyle="#000000";
-    stage.lineWidth=1;
-    stage.lineCap="round";
-
-
-    var offset = (this.getMin()<0)?-this.getMin():0;
-    console.log("offset: " + offset);
-
-
     if (this.points.length>1) {
+      stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      stage.lineCap="round";
+
+      var offset = (this.getMin()<0)?-this.getMin():0;
+
+      stage.strokeStyle="#bdc3c7";
+      stage.lineWidth=2;
+
+      //Draw the y axis if it is in the view
+      if (0>=this.points[0].x && 0<=this.points[this.points.length-1].x) {
+        stage.beginPath();
+        stage.moveTo(this.canvas.width/2-(0-(this.points[0].x+this.points[this.points.length-1].x)/2), 0);
+        stage.lineTo(this.canvas.width/2-(0-(this.points[0].x+this.points[this.points.length-1].x)/2), this.canvas.height);
+        stage.closePath();
+        stage.stroke();
+      }
+
+      //Draw the x axis if it is in the view
+      if (0>=this.getMin() && 0<=this.getMax()) {
+        stage.beginPath();
+        stage.moveTo(0, this.canvas.height/2+(((this.getMax()+this.getMin())/2)/(this.getMax()-this.getMin()))*this.canvas.height);
+        stage.lineTo(this.canvas.width, this.canvas.height/2+(((this.getMax()+this.getMin())/2)/(this.getMax()-this.getMin()))*this.canvas.height);
+        stage.closePath();
+        stage.stroke();
+      }
+
+      //Draw all the points
+      stage.strokeStyle="#2980b9";
+      stage.lineWidth=1;
+      stage.beginPath();
       stage.moveTo(0, this.canvas.height-((this.points[0].y+offset)/(this.getMax()-this.getMin()))*this.canvas.height);
       for (var i=1; i<this.points.length; i++) {
         stage.lineTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.getMax()-this.getMin()))*this.canvas.height);
-        stage.stroke();
         stage.moveTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.getMax()-this.getMin()))*this.canvas.height);
       }
+      stage.closePath();
+      stage.stroke();
     } else {
       console.log("Not enough points to graph.");
     }
   };
 
+  //Returns the canvas element
   this.getCanvas = function() {
     return this.canvas;
   };
 
+  //If canvas drawing is supported
   if (this.canvas.getContext) {
+
     //Get the canvas context to draw onto
     stage = this.canvas.getContext("2d");
     this.canvas.style.backgroundColor="#FFF";
 
-    if (!x1) x1=-10;
-    if (!x2) x2=10;
-
-    var accuracy = (x2-x1)/this.canvas.width;
-
-    for (var i=x1; i<=x2; i+=accuracy) {
-      this.points.push(new Point(i, this.expression.result(i)));
-    }
-
-    console.log(this.getMin() + " to " + this.getMax());
-
-    this.redraw();
+    //Make points
+    this.setPoints(x1, x2);
 
   } else {
     console.log("Canvas not supported in this browser.");
@@ -364,8 +458,7 @@ var XCalc = (function() {
   };
 
   worker.graphExpression = function(value) {
-    var graph = new Graph(value);
-    return graph.getCanvas();
+    return new Graph(value);
   };
 
   return worker;
