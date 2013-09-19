@@ -244,19 +244,18 @@ function Point(x, y) {
 
 
 //Function to create graphs
-function Graph(value, accuracy, x1, x2) {
+function Graph(value, x1, x2) {
   this.expression = new Segment(value);
   this.points = [];
-  this.accuracy = accuracy || 0.5;
   this.canvas = document.createElement("canvas");
   this.canvas.width=400;
   this.canvas.height=400;
-  this.min;
-  this.max;
+  this.min=undefined;
+  this.max=undefined;
   var stage=0;
 
   this.getMin = function() {
-    if (this.min==undefined) {
+    if (this.min===undefined) {
       if (this.points.length>0) {
         var min = this.points[0].y;
         for (var i=1; i<this.points.length; i++) {
@@ -273,7 +272,7 @@ function Graph(value, accuracy, x1, x2) {
   };
 
   this.getMax = function() {
-    if (this.max==undefined) {
+    if (this.max===undefined) {
       if (this.points.length>0) {
         var max = this.points[0].y;
         for (var i=1; i<this.points.length; i++) {
@@ -296,15 +295,16 @@ function Graph(value, accuracy, x1, x2) {
     stage.lineCap="round";
 
 
-    //NOTE TO SELF: NEGATIVE NUMBERS IN MIN AND MAX ARE PROBLEMS
+    var offset = (this.getMin()<0)?-this.getMin():0;
+    console.log("offset: " + offset);
 
 
     if (this.points.length>1) {
-      stage.moveTo(0, (this.points[0].y/(this.getMax()-this.getMin()))*this.canvas.height);
+      stage.moveTo(0, this.canvas.height-((this.points[0].y+offset)/(this.getMax()-this.getMin()))*this.canvas.height);
       for (var i=1; i<this.points.length; i++) {
-        stage.lineTo((i/this.points.length)*this.canvas.width, (this.points[i].y/(this.getMax()-this.getMin()))*this.canvas.height);
+        stage.lineTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.getMax()-this.getMin()))*this.canvas.height);
         stage.stroke();
-        stage.moveTo((i/this.points.length)*this.canvas.width, (this.points[i].y/(this.getMax()-this.getMin()))*this.canvas.height);
+        stage.moveTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.getMax()-this.getMin()))*this.canvas.height);
       }
     } else {
       console.log("Not enough points to graph.");
@@ -323,7 +323,9 @@ function Graph(value, accuracy, x1, x2) {
     if (!x1) x1=-10;
     if (!x2) x2=10;
 
-    for (var i=x1; i<=x2; i+=this.accuracy) {
+    var accuracy = (x2-x1)/this.canvas.width;
+
+    for (var i=x1; i<=x2; i+=accuracy) {
       this.points.push(new Point(i, this.expression.result(i)));
     }
 
@@ -333,8 +335,8 @@ function Graph(value, accuracy, x1, x2) {
 
   } else {
     console.log("Canvas not supported in this browser.");
-    canvas = document.createElement("div");
-    canvas.innerHTML="Canvas is not supported in this browser.";
+    this.canvas = document.createElement("div");
+    this.canvas.innerHTML="Canvas is not supported in this browser.";
   }
 }
 
