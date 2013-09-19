@@ -2,8 +2,61 @@
 var XCalc = (function() {
   var worker={};
 
-  //removes unnecessary brackets around a string
-  worker.removeBrackets = function(value) {
+  //Checks to see if brackets are properly nested in a string
+  worker.properBrackets = function(value) {
+    var openBrackets=0;
+    for (var i=0; i<value.length; i++) {
+      if (value.substr(i, 1)=="(") openBrackets++;
+      if (value.substr(i, 1)==")") openBrackets--;
+    }
+    return openBrackets==0;
+  };
+
+  //Creates a new Section for an expression
+  worker.createExpression = function(value) {
+    if (this.properBrackets(value)) {
+      return new Segment(value);
+    } else {
+      return 0;
+    }
+  }
+
+  return worker;
+}());
+
+//Class for 
+function Operator(input) {
+  this.operator = input;
+  if (!input) {
+    console.log("Operator has no input.");
+    this=0;
+  }
+
+  this.solve = function(segment1, segment2) {
+    if (this.operator=="+") {
+      return new Segment(segment1.coefficient + segment2.coefficient);
+    } else if (this.operator=="-") {
+      return  new Segment(segment1.coefficient - segment2.coefficient);
+    } else if  (this.operator=="*") {
+      return  new Segment(segment1.coefficient * segment2.coefficient);
+    } else if (this.operator=="/") {
+      return  new Segment(segment1.coefficient / segment2.coefficient);
+    } else if (this.operator=="^") {
+      return  new Segment(Math.pow(segment1.coefficient, segment2.coefficient));
+    }
+  };
+}
+
+//Class for a segment of math (a container)
+function Segment(input) {
+  this.sections = [];
+  this.type="section";
+  this.operator=0;
+  this.degree=-1;
+  this.coefficient=0;
+  this.variable="";
+
+  var removeBrackets = function(value) {
     if (!value) return "";
 
     //While there are brackets around the string
@@ -28,10 +81,9 @@ var XCalc = (function() {
     }
 
     return value;
-  }
+  };
 
-  //finds the last occurrence of an operator that is not in brackets
-  worker.findLast = function(operator, value) {
+  var findLast = function(operator, value) {
 
     //Keep searching for the next last sign if the one found is within brackets
     var inBrackets=true;
@@ -84,180 +136,93 @@ var XCalc = (function() {
     return index;
   };
 
-
-  //Divides input up into Sections and Singles
-  worker.parse = function(value) {
-    if (!value) return 0;
-    
-    var sections = [];
-    
-    //Remove excess whitespace
-    value = value.replace(/\s/g, '');
-
-    //get rid of unnecessary brackets surrounding the section
-    value = this.removeBrackets(value);
-    
-    //Find the last instance of each operator in the string
-    var addition = this.findLast("+", value);
-    var subtraction = this.findLast("-", value);
-    var multiplication = this.findLast("*", value);
-    var division = this.findLast("/", value);
-    var exponent = this.findLast("^", value); //Find the first exponent, since those work in reverse
-    var bracket1 = this.findLast("(", value);
-
-    //Push back each half of the equation into a section, in reverse order of operations
-    if (addition != -1 && (subtraction == -1 || addition>subtraction)) {
-      sections.push(new Segment(value.substring(0, addition)));
-      sections.push(new Single(value.substring(addition, addition+1), "operator"));
-      sections.push(new Segment(value.substring(addition+1)));
-    } else if (subtraction != -1) {
-      sections.push(new Segment(value.substring(0, subtraction)));
-      sections.push(new Single(value.substring(subtraction, subtraction+1), "operator"));
-      sections.push(new Segment(value.substring(subtraction+1)));
-    } else if (multiplication != -1 && (division == -1 || multiplication>division)) {
-      sections.push(new Segment(value.substring(0, multiplication)));
-      sections.push(new Single(value.substring(multiplication, multiplication+1), "operator"));
-      sections.push(new Segment(value.substring(multiplication+1)));
-    } else if (division != -1) {
-      sections.push(new Segment(value.substring(0, division)));
-      sections.push(new Single(value.substring(division, division+1), "operator"));
-      sections.push(new Segment(value.substring(division+1)));
-    } else if (exponent != -1) {
-      sections.push(new Segment(value.substring(0, exponent)));
-      sections.push(new Single(value.substring(exponent, exponent+1), "operator"));
-      sections.push(new Segment(value.substring(exponent+1)));
-    } else if (bracket1 != -1) {
-      var openBrackets=1;
-      for (var i=bracket1+1; i<value.length&&openBrackets>0; i++) {
-        if (value.substr(i, 1)=="(") openBrackets++;
-        if (value.substr(i, 1)==")") openBrackets--;
-      }
-      if (openBrackets==0) {
-        var bracket2=i-1;
-        if (bracket1>0) sections.push(new Segment(value.substring(0, bracket1)));
-        if (bracket2-bracket1!=1) sections.push(new Segment(value.substring(bracket1+1, bracket2)));
-        if (bracket2!=value.length-1) sections.push(new Segment(value.substring(bracket2+1)));
-      } else {
-        console.log("Brackets nesting error: " + value);
-        return 0;
-      }
-
-    //If there are no operators, just push the value itself
-    } else {
-      sections.push(new Single(value, "value"));
-    }
-    
-    return sections;
-  };
-
-  //Checks to see if brackets are properly nested in a string
-  worker.properBrackets = function(value) {
-    var openBrackets=0;
-    for (var i=0; i<value.length; i++) {
-      if (value.substr(i, 1)=="(") openBrackets++;
-      if (value.substr(i, 1)==")") openBrackets--;
-    }
-    return openBrackets==0;
-  };
-
-  //Creates a new Section for an expression
-  worker.createExpression = function(value) {
-    if (this.properBrackets(value)) {
-      return new Segment(value);
-    } else {
-      return 0;
-    }
-  }
-
-  return worker;
-}());
-
-//Class for a single number or operator
-function Single(value, type) {
-  this.value = value;
-  this.type = type;
-  this.solve = function() {
-    if (this.type == "value") {
-      return parseFloat(this.value);
-    } else {
-      return 0;
-    }
-  };
-  this.display = function() {
-    return this.value;
-  };
-  this.pretty = function() {
-    var str="<div class='group " + this.type + "' val='" + this.value + "'>";
-    if (this.value!="/" && this.value!="^" && this.value!="*") {
-      str+= this.value;
-    }
-    if (this.value=="*") {
-      str += "&times";
-    }
-    str+="</div>";
-    return str;
-  }
-}
-
-//Class for a segment of math (a container)
-function Segment(value) {
-  this.sections = value?XCalc.parse(value):[];
-  this.type = "section";
-  
   //Recursively solve children
   this.solve = function() {
-    var i=0;
-    var value=0;
-    while (i<this.sections.length) {
-      if (i+1>=this.sections.length) {
-        value = this.sections[i].solve();
-        i++;
-      } else if (this.sections[i+1].type=="operator") {
-        if (this.sections[i+1].value == "+") {
-          value += this.sections[i].solve() + this.sections[i+2].solve();
-        } else if (this.sections[i+1].value == "-") {
-          value += this.sections[i].solve() - this.sections[i+2].solve();
-        } else if (this.sections[i+1].value == "*") {
-          value += this.sections[i].solve() * this.sections[i+2].solve();
-        } else if (this.sections[i+1].value == "/") {
-          value += this.sections[i].solve() / this.sections[i+2].solve();
-        } else if (this.sections[i+1].value == "^") {
-          value += Math.pow(this.sections[i].solve(), this.sections[i+2].solve());
-        }
-        i+=3;
-      } else {
-        value += this.sections[i].solve() * this.sections[i+1].solve();
-        i+=2;
+    if (this.type=="value") {
+      return this;
+    } else {
+      if (this.sections.length==1) {
+        return this.sections[0].solve();
+      } else if (this.sections.length==2) {
+        return this.operator.solve(this.sections[0].solve(), this.sections[1].solve());
       }
     }
-    return value;
   };
-  
-  //Display grouped blocks
+
+  //Outputs the final answer
   this.display = function() {
-    var str="";
-    for (var i=0; i<this.sections.length; i++) {
-      str+="<div class='box'>" + this.sections[i].display();
-      if (this.sections[i].type=="section") str+= "<div class='answer'>= " + this.sections[i].solve() + "</div>";
-      str+="</div>";
-    }
-    return str;
-  };
-  
-  this.pretty = function(css) {
-    var str="<div class='group " + this.type;
-    if (css) str+= " " + css;
-    str+= "' val='" + this.value + "'>";
-    for (var i=0; i<this.sections.length; i++) {
-      if ((i+1<this.sections.length && this.sections[i+1].type!="operator")||(i-1>=0 && this.sections[i-1].type!="operator")) {
-        str+=this.sections[i].pretty("brackets");
+    return this.solve().coefficient;
+  }
+
+
+
+  //constructor
+  if (input) {
+    if (typeof(input)=="string") {
+      //Remove excess whitespace
+      input = input.replace(/\s/g, '');
+
+      //get rid of unnecessary brackets surrounding the section
+      input = removeBrackets(input);
+      
+      //Find the last instance of each operator in the string
+      var addition = findLast("+", input);
+      var subtraction = findLast("-", input);
+      var multiplication = findLast("*", input);
+      var division = findLast("/", input);
+      var exponent = findLast("^", input); //Find the first exponent, since those work in reverse
+      var bracket1 = findLast("(", input);
+
+      //Push back each half of the equation into a section, in reverse order of operations
+      if (addition != -1 && (subtraction == -1 || addition>subtraction)) {
+        this.sections.push(new Segment(input.substring(0, addition)));
+        this.sections.push(new Segment(input.substring(addition+1)));
+        this.operator = new Operator("+");
+      } else if (subtraction != -1) {
+        this.sections.push(new Segment(input.substring(0, subtraction)));
+        this.sections.push(new Segment(input.substring(subtraction+1)));
+        this.operator = new Operator("-");
+      } else if (multiplication != -1 && (division == -1 || multiplication>division)) {
+        this.sections.push(new Segment(input.substring(0, multiplication)));
+        this.sections.push(new Segment(input.substring(multiplication+1)));
+        this.operator = new Operator("*");
+      } else if (division != -1) {
+        this.sections.push(new Segment(input.substring(0, division)));
+        this.sections.push(new Segment(input.substring(division+1)));
+        this.operator = new Operator("/");
+      } else if (exponent != -1) {
+        this.sections.push(new Segment(input.substring(0, exponent)));
+        this.sections.push(new Segment(input.substring(exponent+1)));
+        this.operator = new Operator("^");
+      } else if (bracket1 != -1) {
+        var openBrackets=1;
+        for (var i=bracket1+1; i<input.length&&openBrackets>0; i++) {
+          if (input.substr(i, 1)=="(") openBrackets++;
+          if (input.substr(i, 1)==")") openBrackets--;
+        }
+        if (openBrackets==0) {
+          var bracket2=i-1;
+          if (bracket1>0) this.sections.push(new Segment(input.substring(0, bracket1)));
+          if (bracket2-bracket1!=1) this.sections.push(new Segment(input.substring(bracket1+1, bracket2)));
+          if (bracket2!=input.length-1) this.sections.push(new Segment(input.substring(bracket2+1)));
+          this.operator = new Operator("*");
+        } else {
+          console.log("Brackets nesting error: " + input);
+        }
+
+      //If there are no operators, just push the input itself
       } else {
-        str+=this.sections[i].pretty();
+        this.coefficient = parseFloat(input);
+        this.type = "value";
       }
+    } else if (typeof(input)=="number") {
+      this.coefficient = input;
+      this.type = "value";
     }
-    str+="</div>";
-    return str;
-  };
+  } else {
+    console.log("Segment has no input.");
+    this=0;
+  }
 }
 
 
@@ -266,20 +231,8 @@ function simplifyText(event) {
   if (XCalc.properBrackets(input)) {
     document.getElementById("wrapper").className="";
     var timer = setTimeout(function() {
-      var expression = new Segment(input);
-      document.getElementById("result").innerHTML = expression.pretty("middle") + "<div class='display'>" + expression.display() + "</div><div class='final answer'>= " + expression.solve() + "</div>";
-      var matches = document.querySelectorAll("[val='/']");
-      var i;
-      for (i=0; i<matches.length; i++) {
-        matches[i].previousSibling.style.verticalAlign = "bottom";
-      }
-      matches = document.querySelectorAll("[val='^']");
-      for (i=0; i<matches.length; i++) {
-        matches[i].previousSibling.style.verticalAlign = "middle";
-        if (matches[i].previousSibling.childNodes.length>1) {
-          matches[i].previousSibling.classList.add("brackets");
-        }
-      }
+      var expression = XCalc.createExpression(input);
+      document.getElementById("result").innerHTML = "<div class='final answer'>= " + expression.display() + "</div>";
       document.getElementById("wrapper").className="solved";
     }, 800);
   } else {
