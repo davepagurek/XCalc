@@ -429,7 +429,9 @@ function Graph(value, width, height, rangeX, rangeY) {
       stage.beginPath();
       stage.moveTo(0, this.canvas.height-((this.points[0].y+offset)/(this.getMax()-this.getMin()))*this.canvas.height);
       for (var i=1; i<this.points.length; i++) {
-        stage.lineTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.y2-this.y1))*this.canvas.height);
+        if (Math.abs((this.canvas.height-((this.points[i].y+offset)/(this.y2-this.y1))*this.canvas.height)-(this.canvas.height-((this.points[i-1].y+offset)/(this.y2-this.y1))*this.canvas.height))<=this.canvas.height) {
+          stage.lineTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.y2-this.y1))*this.canvas.height);
+        }
         stage.moveTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.y2-this.y1))*this.canvas.height);
       }
       stage.closePath();
