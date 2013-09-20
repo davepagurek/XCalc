@@ -39,9 +39,13 @@ var graph = XCalc(expression, width, height, rangeX, rangeY);
 ```
 
 `expression:String` The expression to be graphed. <strong>Required.</strong>
+
 `width:Number` The width of the canvas. Default is 400.
+
 `height:Number` The height of the canvas. Default is 400.
+
 `rangeX:Number` The horizontal range of the graph, from x=-rangeX to x=rangeX. Default is 10.
+
 `rangeY:Number` The vertical range of the graph, from y=-rangeX to y=rangeX. Default is auto fit.
 
 
