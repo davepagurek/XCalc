@@ -7,6 +7,18 @@ body {
   padding:0;
   margin:0;
 }
+#github {
+  position:absolute;
+  top:0;
+  right:0;
+  padding:20px;
+  background-color:#123;
+  color:#FFF;
+  text-decoration:none;
+}
+#github:hover {
+  background-color:#234;
+}
 #top {
   padding:20px;
 }

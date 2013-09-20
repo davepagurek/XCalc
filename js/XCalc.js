@@ -385,6 +385,9 @@ function Graph(value, width, height, rangeX, rangeY) {
       if (this.getMax()-this.getMin()>10000) {
         this.y1=-100;
         this.y2=100;
+      } else if (this.getMax() == this.getMin()) {
+        this.y1=this.getMin()-10;
+        this.y2=this.getMax()+10;
       } else {
         this.y1=this.getMin();
         this.y2=this.getMax();
@@ -415,7 +418,7 @@ function Graph(value, width, height, rangeX, rangeY) {
       }
 
       //Draw the x axis if it is in the view
-      if (0>=this.getMin() && 0<=this.getMax()) {
+      if (0>=this.y1 && 0<=this.y2) {
         stage.beginPath();
         stage.moveTo(0, this.canvas.height/2+(((this.y2+this.y1)/2)/(this.y2-this.y1))*this.canvas.height);
         stage.lineTo(this.canvas.width, this.canvas.height/2+(((this.y2+this.y1)/2)/(this.y2-this.y1))*this.canvas.height);
