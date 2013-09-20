@@ -73,7 +73,7 @@ function Segment(input) {
     } else {
       index=value.indexOf(operator); //Look for the first instead of last if it's an exponent
     }
-
+    var operators="+-/*^";
     while (inBrackets) {
       var openBrackets=0;
 
@@ -87,8 +87,8 @@ function Segment(input) {
 
         if (i==index) {
 
-          //If no brackets are open, break the loop.
-          if (openBrackets===0 || (openBrackets==1 && operator=="(")) {
+          //If no brackets are open (and if the operator is actually - and not just a minus sign), break the loop.
+          if ((openBrackets===0 && (operator!="-" || (i>0 && operators.indexOf(value.substr(i-1, 1))==-1) || i===0)) || (openBrackets==1 && operator=="(")) {
             inBrackets=false;
             break;
 
@@ -242,7 +242,11 @@ function Segment(input) {
         this.sections.push(new Segment(input.substring(addition+1)));
         this.operator = new Operator("+");
       } else if (subtraction != -1) {
-        this.sections.push(new Segment(input.substring(0, subtraction)));
+        if (subtraction>0) {
+          this.sections.push(new Segment(input.substring(0, subtraction)));
+        } else {
+          this.sections.push(new Segment(0));
+        }
         this.sections.push(new Segment(input.substring(subtraction+1)));
         this.operator = new Operator("-");
       } else if (multiplication != -1 && (division == -1 || multiplication>division)) {
@@ -308,14 +312,29 @@ function Point(x, y) {
 
 
 //Function to create graphs
-function Graph(value, x1, x2) {
+function Graph(value, width, height, rangeX, rangeY) {
+  var autoRange=false;
+
+  //Default params
+  if (rangeX===undefined) {
+    rangeX=10;
+  }
+  if (rangeY===undefined) {
+    autoRange = true;
+  }
+
+  //Properties
   this.expression = new Segment(value);
   this.points = [];
   this.canvas = document.createElement("canvas");
-  this.canvas.width=400;
-  this.canvas.height=400;
+  this.canvas.width=width || 400;
+  this.canvas.height=height || 400;
   this.min=undefined;
   this.max=undefined;
+  this.x1 = 0-Math.abs(rangeX);
+  this.x2 = 0+Math.abs(rangeX);
+  this.y1 = 0-Math.abs(rangeY);
+  this.y2 = 0+Math.abs(rangeY);
   var stage=0;
 
   //Gets minimum y value in the set of points
@@ -354,14 +373,22 @@ function Graph(value, x1, x2) {
     }
   };
 
-  this.setPoints = function(x1, x2) {
-    if (!x1) x1=-10;
-    if (!x2) x2=10;
-
-    var accuracy = (x2-x1)/this.canvas.width;
+  //Updates the points and graph
+  this.update = function() {
+    var accuracy = (this.x2-this.x1)/this.canvas.width;
     this.points = [];
-    for (var i=x1; i<=x2; i+=accuracy) {
+    for (var i=this.x1; i<=this.x2; i+=accuracy) {
       this.points.push(new Point(i, this.expression.result(i)));
+    }
+
+    if (autoRange) {
+      if (this.getMax()-this.getMin()>10000) {
+        this.y1=-100;
+        this.y2=100;
+      } else {
+        this.y1=this.getMin();
+        this.y2=this.getMax();
+      }
     }
 
     this.redraw();
@@ -373,7 +400,7 @@ function Graph(value, x1, x2) {
       stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
       stage.lineCap="round";
 
-      var offset = (this.getMin()<0)?-this.getMin():0;
+      var offset = (this.y1<0)?-this.y1:0;
 
       stage.strokeStyle="#bdc3c7";
       stage.lineWidth=2;
@@ -390,8 +417,8 @@ function Graph(value, x1, x2) {
       //Draw the x axis if it is in the view
       if (0>=this.getMin() && 0<=this.getMax()) {
         stage.beginPath();
-        stage.moveTo(0, this.canvas.height/2+(((this.getMax()+this.getMin())/2)/(this.getMax()-this.getMin()))*this.canvas.height);
-        stage.lineTo(this.canvas.width, this.canvas.height/2+(((this.getMax()+this.getMin())/2)/(this.getMax()-this.getMin()))*this.canvas.height);
+        stage.moveTo(0, this.canvas.height/2+(((this.y2+this.y1)/2)/(this.y2-this.y1))*this.canvas.height);
+        stage.lineTo(this.canvas.width, this.canvas.height/2+(((this.y2+this.y1)/2)/(this.y2-this.y1))*this.canvas.height);
         stage.closePath();
         stage.stroke();
       }
@@ -402,8 +429,8 @@ function Graph(value, x1, x2) {
       stage.beginPath();
       stage.moveTo(0, this.canvas.height-((this.points[0].y+offset)/(this.getMax()-this.getMin()))*this.canvas.height);
       for (var i=1; i<this.points.length; i++) {
-        stage.lineTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.getMax()-this.getMin()))*this.canvas.height);
-        stage.moveTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.getMax()-this.getMin()))*this.canvas.height);
+        stage.lineTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.y2-this.y1))*this.canvas.height);
+        stage.moveTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.y2-this.y1))*this.canvas.height);
       }
       stage.closePath();
       stage.stroke();
@@ -425,7 +452,7 @@ function Graph(value, x1, x2) {
     this.canvas.style.backgroundColor="#FFF";
 
     //Make points
-    this.setPoints(x1, x2);
+    this.update();
 
   } else {
     console.log("Canvas not supported in this browser.");
@@ -457,8 +484,8 @@ var XCalc = (function() {
     }
   };
 
-  worker.graphExpression = function(value) {
-    return new Graph(value);
+  worker.graphExpression = function(value, width, height, rangeX, rangeY) {
+    return new Graph(value, width, height, rangeX, rangeY);
   };
 
   return worker;

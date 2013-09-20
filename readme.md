@@ -22,6 +22,7 @@ If an x value is not specified, x defaults to zero.
 
 <h3>Graphs</h3>
 XCalc graphs are created like this:
+
 ```javascript
 var graph = XCalc.graphExpression("x^2");
 ```
@@ -30,6 +31,19 @@ To add the graph canvas to the page:
 ```javascript
 document.getElementById("result").appendChild(graph.getCanvas());
 ```
+
+<h4>Parameters</h4>
+A new graph is created using the following syntax:
+```javascript
+var graph = XCalc(expression, width, height, rangeX, rangeY);
+```
+
+`expression:String` The expression to be graphed. <strong>Required.</strong>
+`width:Number` The width of the canvas. Default is 400.
+`height:Number` The height of the canvas. Default is 400.
+`rangeX:Number` The horizontal range of the graph, from x=-rangeX to x=rangeX. Default is 10.
+`rangeY:Number` The vertical range of the graph, from y=-rangeX to y=rangeX. Default is auto fit.
+
 
 <h2>Operations Supported</h2>
 As of version 1.6:
