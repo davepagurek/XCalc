@@ -35,7 +35,7 @@ document.getElementById("result").appendChild(graph.getCanvas());
 <h4>Parameters</h4>
 A new graph is created using the following syntax:
 ```javascript
-var graph = XCalc(expression, width, height, rangeX, rangeY);
+var graph = XCalc.graphExpression(expression, width, height, rangeX, rangeY);
 ```
 
 `expression:String` The expression to be graphed. <strong>Required.</strong>
