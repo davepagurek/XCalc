@@ -144,6 +144,56 @@ function Segment(input) {
     return index;
   };
 
+  var findLastTrig = function(trig, value) {
+    var matches=0;
+    var index=-1;
+    var r=0;
+    if (trig=="sin") {
+      r=/(a)?sin/g;
+    } else if (trig=="cos") {
+      r=/(a)?cos/g;
+    } else if (trig=="tan") {
+      r=/(a)?tan/g;
+    } else {
+      return -1;
+    }
+    while (matches=r.exec(value)) if (RegExp.$1 != "a") index=matches.index;
+    var inBrackets=true;
+    while (inBrackets && index!=-1) {
+      var openBrackets=0;
+
+      //Find how many brackets are opened or closed at a given point in the string
+      for (var i=0; i<value.length; i++) {
+        if (value.substr(i, 1)=="(") {
+          openBrackets++;
+        } else if (value.substr(i, 1)==")") {
+          openBrackets--;
+        }
+
+        if (i==index) {
+
+          //If no brackets are open (and if the operator is actually - and not just a minus sign), break the loop.
+          if (openBrackets===0) {
+            inBrackets=false;
+            break;
+
+          //Otherwise, find the next operator, and loop through again to see if that one is in brackets
+          } else {
+            var sub = value.substring(0, index);
+            index=-1;
+            while (matches=r.exec(sub)) if (RegExp.$1 != "a") index=matches.index;
+          }
+        }
+      }
+
+      //If no more operators are found, break the loop
+      if (index==-1) {
+        inBrackets=false;
+      }
+    }
+    return index;
+  }
+
   //Specifically for finding brackets that can be used for multiplication
   var findMultiplicationBrackets = function(value) {
 
@@ -264,7 +314,7 @@ function Segment(input) {
       var exponent = findLast("^", input); //Find the first exponent, since those work in reverse
       var bracket1 = findLast("(", input);
 
-      var matches=0;
+      /*var matches=0;
 
       var sin=-1;
       var r=/(a)?sin/g;
@@ -276,8 +326,11 @@ function Segment(input) {
 
       var tan=-1;
       r=/(a)?tan/g;
-      while (matches=r.exec(input)) if (RegExp.$1 != "a") tan=matches.index;
+      while (matches=r.exec(input)) if (RegExp.$1 != "a") tan=matches.index;*/
 
+      var sin = findLastTrig("sin", input);
+      var cos = findLastTrig("cos", input);
+      var tan = findLastTrig("tan", input);
       var asin = findLast("asin", input);
       var acos = findLast("acos", input);
       var atan = findLast("atan", input);
@@ -323,11 +376,11 @@ function Segment(input) {
         this.sections.push(new Segment(input.substring(0, exponent)));
         this.sections.push(new Segment(input.substring(exponent+1)));
         this.operator = new Operator("^");
-      } else if (sin != -1 && (cos != -1 || sin>cos) && (tan == -1 || sin>tan) && (asin == -1 || sin>asin) && (acos == -1 || sin>acos) && (atan == -1 || sin>atan) && (abs == -1 || sin>abs)) {
+      } else if (sin != -1 && (cos == -1 || sin>cos) && (tan == -1 || sin>tan) && (asin == -1 || sin>asin) && (acos == -1 || sin>acos) && (atan == -1 || sin>atan) && (abs == -1 || sin>abs)) {
         this.sections.push(new Segment(input.substring(sin+3)));
         this.mathFunction = new MathFunction("sin");
         this.type = "function";
-      } else if (cos != -1 && (tan != -1 || cos>tan) && (asin == -1 || cos>asin) && (acos == -1 || cos>acos) && (atan == -1 || cos>atan) && (abs == -1 || cos>abs)) {
+      } else if (cos != -1 && (tan == -1 || cos>tan) && (asin == -1 || cos>asin) && (acos == -1 || cos>acos) && (atan == -1 || cos>atan) && (abs == -1 || cos>abs)) {
         this.sections.push(new Segment(input.substring(cos+3)));
         this.mathFunction = new MathFunction("cos");
         this.type = "function";

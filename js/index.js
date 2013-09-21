@@ -4,7 +4,7 @@ function simplifyText(event) {
     document.getElementById("wrapper").className="";
     var timer = setTimeout(function() {
       var graph = XCalc.graphExpression(input);
-      document.getElementById("result").innerHTML = "<div>" + graph.expression.display() + "</div>";
+      document.getElementById("result").innerHTML = "";
       document.getElementById("result").appendChild(graph.getCanvas());
       document.getElementById("wrapper").className="solved";
     }, 800);
