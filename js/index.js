@@ -3,7 +3,7 @@ function simplifyText(event) {
   if (XCalc.properBrackets(input)) {
     document.getElementById("wrapper").className="";
     var timer = setTimeout(function() {
-      var graph = XCalc.graphExpression(input);
+      var graph = XCalc.graphExpression(input, 400, 400);
       document.getElementById("result").innerHTML = "";
       document.getElementById("result").appendChild(graph.getCanvas());
       document.getElementById("wrapper").className="solved";

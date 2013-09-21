@@ -157,7 +157,7 @@ function Segment(input) {
     } else {
       return -1;
     }
-    while (matches=r.exec(value)) if (RegExp.$1 != "a") index=matches.index;
+    for (matches=r.exec(value); matches; matches=r.exec(value)) if (RegExp.$1 != "a") index=matches.index;
     var inBrackets=true;
     while (inBrackets && index!=-1) {
       var openBrackets=0;
@@ -181,7 +181,7 @@ function Segment(input) {
           } else {
             var sub = value.substring(0, index);
             index=-1;
-            while (matches=r.exec(sub)) if (RegExp.$1 != "a") index=matches.index;
+            for (matches=r.exec(sub); matches; matches=r.exec(sub)) if (RegExp.$1 != "a") index=matches.index;
           }
         }
       }
@@ -192,7 +192,7 @@ function Segment(input) {
       }
     }
     return index;
-  }
+  };
 
   //Specifically for finding brackets that can be used for multiplication
   var findMultiplicationBrackets = function(value) {
@@ -313,20 +313,6 @@ function Segment(input) {
       var division = findLast("/", input);
       var exponent = findLast("^", input); //Find the first exponent, since those work in reverse
       var bracket1 = findLast("(", input);
-
-      /*var matches=0;
-
-      var sin=-1;
-      var r=/(a)?sin/g;
-      while (matches=r.exec(input)) if (RegExp.$1 != "a") sin=matches.index;
-
-      var cos=-1;
-      r=/(a)?cos/g;
-      while (matches=r.exec(input)) if (RegExp.$1 != "a") cos=matches.index;
-
-      var tan=-1;
-      r=/(a)?tan/g;
-      while (matches=r.exec(input)) if (RegExp.$1 != "a") tan=matches.index;*/
 
       var sin = findLastTrig("sin", input);
       var cos = findLastTrig("cos", input);
@@ -478,7 +464,9 @@ function Graph(value, width, height, rangeX, rangeY) {
   this.x2 = 0+Math.abs(rangeX);
   this.y1 = 0-Math.abs(rangeY);
   this.y2 = 0+Math.abs(rangeY);
+  var startMouse = new Point(0, 0);
   var stage=0;
+  var img=0;
 
   //Gets minimum y value in the set of points
   this.getMin = function() {
@@ -532,10 +520,34 @@ function Graph(value, width, height, rangeX, rangeY) {
         this.y1=this.getMin()-5;
         this.y2=this.getMax()+5;
       }
+      autoRange = false;
     }
 
     this.redraw();
   };
+
+  var drawAxes = function(_x1, _x2, _y1, _y2) {
+    stage.strokeStyle="#bdc3c7";
+    stage.lineWidth=2;
+
+    //Draw the y axis if it is in the view
+    if (0>=_x1 && 0<=_x2) {
+      stage.beginPath();
+      stage.moveTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width, 0);
+      stage.lineTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width, this.canvas.height);
+      stage.closePath();
+      stage.stroke();
+    }
+
+    //Draw the x axis if it is in the view
+    if (0>=_y1 && 0<=_y2) {
+      stage.beginPath();
+      stage.moveTo(0, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height);
+      stage.lineTo(this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height);
+      stage.closePath();
+      stage.stroke();
+    }
+  }.bind(this);
 
   //Updates the canvas
   this.redraw = function() {
@@ -543,46 +555,77 @@ function Graph(value, width, height, rangeX, rangeY) {
       stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
       stage.lineCap="round";
 
-      var offset = (this.y1<0)?-this.y1:0;
+      var offsetY = -this.y1;
 
-      stage.strokeStyle="#bdc3c7";
-      stage.lineWidth=2;
-
-      //Draw the y axis if it is in the view
-      if (0>=this.points[0].x && 0<=this.points[this.points.length-1].x) {
-        stage.beginPath();
-        stage.moveTo(this.canvas.width/2-(0-(this.points[0].x+this.points[this.points.length-1].x)/2), 0);
-        stage.lineTo(this.canvas.width/2-(0-(this.points[0].x+this.points[this.points.length-1].x)/2), this.canvas.height);
-        stage.closePath();
-        stage.stroke();
-      }
-
-      //Draw the x axis if it is in the view
-      if (0>=this.y1 && 0<=this.y2) {
-        stage.beginPath();
-        stage.moveTo(0, this.canvas.height/2+(((this.y2+this.y1)/2)/(this.y2-this.y1))*this.canvas.height);
-        stage.lineTo(this.canvas.width, this.canvas.height/2+(((this.y2+this.y1)/2)/(this.y2-this.y1))*this.canvas.height);
-        stage.closePath();
-        stage.stroke();
-      }
+      drawAxes(this.x1, this.x2, this.y1, this.y2);
 
       //Draw all the points
       stage.strokeStyle="#2980b9";
       stage.lineWidth=1;
       stage.beginPath();
-      stage.moveTo(0, this.canvas.height-((this.points[0].y+offset)/(this.getMax()-this.getMin()))*this.canvas.height);
+      stage.moveTo(0, this.canvas.height-((this.points[0].y+offsetY)/(this.getMax()-this.getMin()))*this.canvas.height);
       for (var i=1; i<this.points.length; i++) {
-        if (Math.abs((this.canvas.height-((this.points[i].y+offset)/(this.y2-this.y1))*this.canvas.height)-(this.canvas.height-((this.points[i-1].y+offset)/(this.y2-this.y1))*this.canvas.height))<=this.canvas.height) {
-          stage.lineTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.y2-this.y1))*this.canvas.height);
+        if (Math.abs((this.canvas.height-((this.points[i].y+offsetY)/(this.y2-this.y1))*this.canvas.height)-(this.canvas.height-((this.points[i-1].y+offsetY)/(this.y2-this.y1))*this.canvas.height))<=this.canvas.height) {
+          stage.lineTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offsetY)/(this.y2-this.y1))*this.canvas.height);
         }
-        stage.moveTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offset)/(this.y2-this.y1))*this.canvas.height);
+        stage.moveTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offsetY)/(this.y2-this.y1))*this.canvas.height);
       }
       stage.closePath();
       stage.stroke();
+
+      img = stage.getImageData(0, 0, this.canvas.width, this.canvas.height);
     } else {
       console.log("Not enough points to graph.");
     }
   };
+
+  this.setRange = function(_x1, _x2, _y1, _y2) {
+    this.x1=_x1;
+    this.x2=_x2;
+    this.y1=_y1;
+    this.y2=_y2;
+    this.update();
+  };
+
+  var getMousePos = function(evt) {
+      var rect = this.canvas.getBoundingClientRect();
+      var root = document.documentElement;
+      
+      // return relative mouse position
+      var mouseX = evt.clientX - rect.left - root.scrollLeft;
+      var mouseY = evt.clientY - rect.top - root.scrollTop;
+      
+      return new Point(mouseX, mouseY);
+  }.bind(this);
+
+  var startDrag = function(event) {
+    this.canvas.addEventListener("mousemove", dragMouse, false);
+    document.addEventListener("mouseup", endDrag, false);
+    startMouse = getMousePos(event);
+  }.bind(this);
+
+  var dragMouse = function(event) {
+    stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    var mousePos = getMousePos(event);
+    var newx1 = this.x1-((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
+    var newx2 = this.x2-((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
+    var newy1 = this.y1+((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
+    var newy2 = this.y2+((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
+
+    drawAxes(newx1, newx2, newy1, newy2);
+
+    stage.putImageData(img, mousePos.x-startMouse.x, mousePos.y-startMouse.y);
+  }.bind(this);
+
+  var endDrag = function(event) {
+    this.canvas.removeEventListener("mousemove", dragMouse, false);
+    document.removeEventListener("mouseup", endDrag, false);
+    var mousePos = getMousePos(event);
+
+    var offsetX = ((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
+    var offsetY = ((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
+    this.setRange(this.x1-offsetX, this.x2-offsetX, this.y1+offsetY, this.y2+offsetY);
+  }.bind(this);
 
   //Returns the canvas element
   this.getCanvas = function() {
@@ -598,6 +641,8 @@ function Graph(value, width, height, rangeX, rangeY) {
 
     //Make points
     this.update();
+
+    this.canvas.addEventListener("mousedown", startDrag, false);
 
   } else {
     console.log("Canvas not supported in this browser.");
