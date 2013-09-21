@@ -50,12 +50,23 @@ var graph = XCalc.graphExpression(expression, width, height, rangeX, rangeY);
 
 
 <h2>Operations Supported</h2>
-As of version 1.6:
+As of version 1.7:
 <ul>
 	<li>Addition (x+y)</li>
 	<li>Subtraction (x-y)</li>
 	<li>Multiplication (x*y or (x)(y))</li>
 	<li>Division (x/y)</li>
 	<li>Exponents (x^y or x^(1/y) for roots)</li>
+	<li>The following functions:
+		<ul>
+			<li>sin</li>
+			<li>cos</li>
+			<li>tan</li>
+			<li>asin</li>
+			<li>acos</li>
+			<li>atan</li>
+			<li>abs</li>
+		</ul>
+	</li>
 	<li>Single variable evaluation (include "x" in the expression string)</li>
 </ul>

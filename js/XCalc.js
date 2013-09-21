@@ -28,12 +28,40 @@ function Operator(input) {
   };
 }
 
+//Class for special functions
+function MathFunction(input) {
+  this.f=input;
+  if (!input) {
+    console.log("Math function has no input.");
+  }
+
+  this.solve = function(segment) {
+    var v = segment.coefficient;
+    if (this.f=="sin") {
+      return new Segment(Math.sin(v));
+    } else if (this.f=="cos") {
+      return new Segment(Math.cos(v));
+    } else if (this.f=="tan") {
+      return new Segment(Math.tan(v));
+    } else if (this.f=="asin") {
+      return new Segment(Math.asin(v));
+    } else if (this.f=="acos") {
+      return new Segment(Math.acos(v));
+    } else if (this.f=="atan") {
+      return new Segment(Math.atan(v));
+    } else if (this.f=="abs") {
+      return new Segment(Math.abs(v));
+    }
+  };
+}
+
 //Class for a segment of math (a container)
 function Segment(input) {
   this.sections = [];
   this.type="section";
   this.operator=0;
   this.coefficient=0;
+  this.mathFunction=0;
   this.variable="";
 
   var removeBrackets = function(value) {
@@ -124,7 +152,7 @@ function Segment(input) {
     var inBracketsClosed=true;
     var indexOpen=-1;
     var indexClosed=-1;
-    var operators="+-/*^";
+    var operators="+-/*^sincostanabs";
     
     indexOpen=value.lastIndexOf("(");
     indexClosed=value.lastIndexOf(")");
@@ -186,6 +214,8 @@ function Segment(input) {
       return this;
     } else if (this.type=="variable") {
       return new Segment(x);
+    } else if (this.type=="function") {
+      return this.mathFunction.solve(this.sections[0].solve(x));
     } else {
       if (this.sections.length==1) {
         return this.sections[0].solve(x);
@@ -202,7 +232,8 @@ function Segment(input) {
 
   this.display = function(x) {
     if (this.type=="value") return this.coefficient;
-    if (this.type=="variable") return x;
+    if (this.type=="variable") return "x";
+    if (this.type=="function") return this.mathFunction.f;
     var str = "<div class='group'>";
     for (var i=0; i<this.sections.length; i++) {
       str+=this.sections[i].display(x);
@@ -229,12 +260,39 @@ function Segment(input) {
       //Find the last instance of each operator in the string
       var addition = findLast("+", input);
       var subtraction = findLast("-", input);
-      var multiplication1 = findLast("*", input);
-      var multiplication2 = findMultiplicationBrackets(input); //Find brackets that are the same as multiplication
-      var multiplication = (multiplication1>multiplication2)?multiplication1:multiplication2;
       var division = findLast("/", input);
       var exponent = findLast("^", input); //Find the first exponent, since those work in reverse
       var bracket1 = findLast("(", input);
+
+      var matches=0;
+
+      var sin=-1;
+      var r=/(a)?sin/g;
+      while (matches=r.exec(input)) if (RegExp.$1 != "a") sin=matches.index;
+
+      var cos=-1;
+      r=/(a)?cos/g;
+      while (matches=r.exec(input)) if (RegExp.$1 != "a") cos=matches.index;
+
+      var tan=-1;
+      r=/(a)?tan/g;
+      while (matches=r.exec(input)) if (RegExp.$1 != "a") tan=matches.index;
+
+      var asin = findLast("asin", input);
+      var acos = findLast("acos", input);
+      var atan = findLast("atan", input);
+      var abs = findLast("abs", input);
+      var multiplication1 = findLast("*", input);
+      var multiplication2 = findMultiplicationBrackets(input); //Find brackets that are the same as multiplication
+      var multiplication = (multiplication1>multiplication2)?multiplication1:multiplication2;
+      var functionMultiplication = -1;
+      if (sin>multiplication) functionMultiplication=sin;
+      if (cos>multiplication) functionMultiplication=cos;
+      if (tan>multiplication) functionMultiplication=tan;
+      if (asin>multiplication) functionMultiplication=asin;
+      if (acos>multiplication) functionMultiplication=acos;
+      if (atan>multiplication) functionMultiplication=atan;
+      if (abs>multiplication) functionMultiplication=abs;
 
       //Push back each half of the equation into a section, in reverse order of operations
       if (addition != -1 && (subtraction == -1 || addition>subtraction)) {
@@ -249,6 +307,10 @@ function Segment(input) {
         }
         this.sections.push(new Segment(input.substring(subtraction+1)));
         this.operator = new Operator("-");
+      } else if (functionMultiplication >0 && functionMultiplication > multiplication && functionMultiplication > division) {
+        this.sections.push(new Segment(input.substring(0, functionMultiplication)));
+        this.sections.push(new Segment(input.substring(functionMultiplication)));
+        this.operator = new Operator("*");
       } else if (multiplication != -1 && (division == -1 || multiplication>division)) {
         this.sections.push(new Segment(input.substring(0, multiplication)));
         this.sections.push(new Segment(input.substring(multiplication+1)));
@@ -261,6 +323,34 @@ function Segment(input) {
         this.sections.push(new Segment(input.substring(0, exponent)));
         this.sections.push(new Segment(input.substring(exponent+1)));
         this.operator = new Operator("^");
+      } else if (sin != -1 && (cos != -1 || sin>cos) && (tan == -1 || sin>tan) && (asin == -1 || sin>asin) && (acos == -1 || sin>acos) && (atan == -1 || sin>atan) && (abs == -1 || sin>abs)) {
+        this.sections.push(new Segment(input.substring(sin+3)));
+        this.mathFunction = new MathFunction("sin");
+        this.type = "function";
+      } else if (cos != -1 && (tan != -1 || cos>tan) && (asin == -1 || cos>asin) && (acos == -1 || cos>acos) && (atan == -1 || cos>atan) && (abs == -1 || cos>abs)) {
+        this.sections.push(new Segment(input.substring(cos+3)));
+        this.mathFunction = new MathFunction("cos");
+        this.type = "function";
+      } else if (tan != -1 && (asin == -1 || tan>asin) && (acos == -1 || tan>acos) && (atan == -1 || tan>atan) && (abs == -1 || tan>abs)) {
+        this.sections.push(new Segment(input.substring(tan+3)));
+        this.mathFunction = new MathFunction("tan");
+        this.type = "function";
+      } else if (asin != -1 && (acos == -1 || asin>acos) && (atan == -1 || asin>atan) && (abs == -1 || asin>abs)) {
+        this.sections.push(new Segment(input.substring(asin+4)));
+        this.mathFunction = new MathFunction("asin");
+        this.type = "function";
+      } else if (acos != -1 && (atan == -1 || acos>atan) && (abs == -1 || acos>abs)) {
+        this.sections.push(new Segment(input.substring(acos+4)));
+        this.mathFunction = new MathFunction("acos");
+        this.type = "function";
+      } else if (atan != -1 && (abs == -1 || atan>abs)) {
+        this.sections.push(new Segment(input.substring(atan+4)));
+        this.mathFunction = new MathFunction("atan");
+        this.type = "function";
+      } else if (abs != -1) {
+        this.sections.push(new Segment(input.substring(abs+3)));
+        this.mathFunction = new MathFunction("abs");
+        this.type = "function";
       } else if (bracket1 != -1) {
         var openBrackets=1;
         for (var i=bracket1+1; i<input.length&&openBrackets>0; i++) {
@@ -311,7 +401,7 @@ function Point(x, y) {
 }
 
 
-//Function to create graphs
+//MathFunction to create graphs
 function Graph(value, width, height, rangeX, rangeY) {
   var autoRange=false;
 
@@ -385,12 +475,9 @@ function Graph(value, width, height, rangeX, rangeY) {
       if (this.getMax()-this.getMin()>10000) {
         this.y1=-100;
         this.y2=100;
-      } else if (this.getMax() == this.getMin()) {
-        this.y1=this.getMin()-10;
-        this.y2=this.getMax()+10;
       } else {
-        this.y1=this.getMin();
-        this.y2=this.getMax();
+        this.y1=this.getMin()-5;
+        this.y2=this.getMax()+5;
       }
     }
 
