@@ -321,9 +321,8 @@ function Segment(input) {
       var acos = findLast("acos", input);
       var atan = findLast("atan", input);
       var abs = findLast("abs", input);
-      var multiplication1 = findLast("*", input);
+      var multiplication = findLast("*", input);
       var multiplication2 = findMultiplicationBrackets(input); //Find brackets that are the same as multiplication
-      var multiplication = (multiplication1>multiplication2)?multiplication1:multiplication2;
       var functionMultiplication = -1;
       if (sin>multiplication) functionMultiplication=sin;
       if (cos>multiplication) functionMultiplication=cos;
@@ -349,6 +348,10 @@ function Segment(input) {
       } else if (functionMultiplication >0 && functionMultiplication > multiplication && functionMultiplication > division) {
         this.sections.push(new Segment(input.substring(0, functionMultiplication)));
         this.sections.push(new Segment(input.substring(functionMultiplication)));
+        this.operator = new Operator("*");
+      } else if (multiplication2 != -1 && (division == -1 || multiplication>division) && (multiplication == -1 || multiplication2>multiplication)) {
+        this.sections.push(new Segment(input.substring(0, multiplication2)));
+        this.sections.push(new Segment(input.substring(multiplication2)));
         this.operator = new Operator("*");
       } else if (multiplication != -1 && (division == -1 || multiplication>division)) {
         this.sections.push(new Segment(input.substring(0, multiplication)));
@@ -515,7 +518,7 @@ function Graph(value, width, height, rangeX, rangeY) {
     }
 
     if (autoRange) {
-      if (this.getMax()-this.getMin()>10000) {
+      if (this.getMax()-this.getMin()>100000) {
         this.y1=-100;
         this.y2=100;
       } else {
