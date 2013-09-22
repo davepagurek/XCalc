@@ -467,6 +467,8 @@ function Graph(value, width, height, rangeX, rangeY) {
   var startMouse = new Point(0, 0);
   var stage=0;
   var img=0;
+  var magnitudeX = 0;
+  var magnitudeY = 0;
 
   //Gets minimum y value in the set of points
   this.getMin = function() {
@@ -523,6 +525,9 @@ function Graph(value, width, height, rangeX, rangeY) {
       autoRange = false;
     }
 
+    magnitudeX = Math.ceil(Math.log(this.x2-this.x1));
+    magnitudeY = Math.ceil(Math.log(this.y2-this.y1));
+
     this.redraw();
   };
 
@@ -563,7 +568,7 @@ function Graph(value, width, height, rangeX, rangeY) {
       stage.strokeStyle="#2980b9";
       stage.lineWidth=1;
       stage.beginPath();
-      stage.moveTo(0, this.canvas.height-((this.points[0].y+offsetY)/(this.getMax()-this.getMin()))*this.canvas.height);
+      stage.moveTo(0, this.canvas.height-((this.points[0].y+offsetY)/(this.y2-this.y1))*this.canvas.height);
       for (var i=1; i<this.points.length; i++) {
         if (Math.abs((this.canvas.height-((this.points[i].y+offsetY)/(this.y2-this.y1))*this.canvas.height)-(this.canvas.height-((this.points[i-1].y+offsetY)/(this.y2-this.y1))*this.canvas.height))<=this.canvas.height) {
           stage.lineTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offsetY)/(this.y2-this.y1))*this.canvas.height);
