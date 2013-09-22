@@ -534,26 +534,85 @@ function Graph(value, width, height, rangeX, rangeY) {
     this.redraw();
   };
 
-  var drawAxes = function(_x1, _x2, _y1, _y2) {
+  var drawAxes = function(_x1, _x2, _y1, _y2, redraw) {
     stage.strokeStyle="#bdc3c7";
-    stage.lineWidth=2;
+    stage.fillStyle="#bdc3c7";
+    stage.textAlign = "right";
 
     //Draw the y axis if it is in the view
     if (0>=_x1 && 0<=_x2) {
+      stage.lineWidth=2;
       stage.beginPath();
       stage.moveTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width, 0);
       stage.lineTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width, this.canvas.height);
       stage.closePath();
       stage.stroke();
+      stage.textBaseline="middle";
+
+      stage.lineWidth=1;
+      var limit = (Math.abs(_y2)>Math.abs(_y1))?Math.abs(_y2):Math.abs(_y1);
+      for (var i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_y2-_y1) / Math.LN10))/4) {
+        if (i==0) continue;
+        if (i<=_y2) {
+          if (redraw || (i>=this.y2)) {
+            stage.beginPath();
+            stage.moveTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width-5, this.canvas.height-((i-_y1)/(_y2-_y1))*this.canvas.height);
+            stage.lineTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width+5, this.canvas.height-((i-_y1)/(_y2-_y1))*this.canvas.height);
+            stage.closePath();
+            stage.stroke();
+            stage.fillText(""+(Math.round(i*100)/100), this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width-8, this.canvas.height-((i-_y1)/(_y2-_y1))*this.canvas.height);
+          }
+        }
+
+        if (i>=_y1) {
+          if (redraw || (-i<=this.y1)) {
+            stage.beginPath();
+            stage.moveTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width-5, this.canvas.height-((-i-_y1)/(_y2-_y1))*this.canvas.height);
+            stage.lineTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width+5, this.canvas.height-((-i-_y1)/(_y2-_y1))*this.canvas.height);
+            stage.closePath();
+            stage.stroke();
+            stage.fillText(""+(Math.round(-i*100)/100), this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width-8, this.canvas.height-((-i-_y1)/(_y2-_y1))*this.canvas.height);
+          }
+        }
+      }
     }
 
     //Draw the x axis if it is in the view
     if (0>=_y1 && 0<=_y2) {
+      stage.lineWidth=2;
       stage.beginPath();
       stage.moveTo(0, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height);
       stage.lineTo(this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height);
       stage.closePath();
       stage.stroke();
+      stage.textBaseline="top";
+
+      stage.lineWidth=1;
+      var limit = (Math.abs(_x2)>Math.abs(_x1))?Math.abs(_x2):Math.abs(_x1);
+      for (var i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_x2-_x1) / Math.LN10))/4) {
+        if (i==0) continue;
+        if (i<=_x2) {
+          if (redraw || (i>=this.x2)) {
+            stage.beginPath();
+            stage.moveTo(this.canvas.width-((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height-5);
+            stage.lineTo(this.canvas.width-((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+5);
+            stage.closePath();
+            stage.stroke();
+            stage.fillText(""+(Math.round(i*100)/100), this.canvas.width-((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+8);
+          }
+        }
+
+        if (i>=_x1) {
+          if (redraw || (-i<=this.x1)) {
+            stage.beginPath();
+            stage.moveTo(this.canvas.width-((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height-5);
+            stage.lineTo(this.canvas.width-((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+5);
+            stage.closePath();
+            stage.stroke();
+            stage.fillText(""+(Math.round(-i*100)/100), this.canvas.width-((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+8);
+          }
+        }
+      }
     }
   }.bind(this);
 
@@ -565,7 +624,7 @@ function Graph(value, width, height, rangeX, rangeY) {
 
       var offsetY = -this.y1;
 
-      drawAxes(this.x1, this.x2, this.y1, this.y2);
+      drawAxes(this.x1, this.x2, this.y1, this.y2, true);
 
       //Draw all the points
       stage.strokeStyle="#2980b9";
@@ -622,7 +681,7 @@ function Graph(value, width, height, rangeX, rangeY) {
     var newy1 = this.y1+((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
     var newy2 = this.y2+((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
 
-    drawAxes(newx1, newx2, newy1, newy2);
+    drawAxes(newx1, newx2, newy1, newy2, false);
 
     stage.putImageData(img, mousePos.x-startMouse.x, mousePos.y-startMouse.y);
   }.bind(this);
@@ -659,6 +718,7 @@ function Graph(value, width, height, rangeX, rangeY) {
     stage.fillStyle="#000";
     stage.strokeStyle="#FFF";
     stage.lineWidth=4;
+    stage.textBaseline="alphabetic";
     var txt="(" + (Math.round(this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].x*100)/100).toFixed(2) + ", " + (Math.round(this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].y*100)/100).toFixed(2) + ")";
 
     if (mousePos.x<stage.measureText(txt).width/2+2) {
