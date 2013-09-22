@@ -607,8 +607,10 @@ function Graph(value, width, height, rangeX, rangeY) {
   }.bind(this);
 
   var startDrag = function(event) {
-    this.canvas.addEventListener("mousemove", dragMouse, false);
+    document.addEventListener("mousemove", dragMouse, false);
     document.addEventListener("mouseup", endDrag, false);
+    this.canvas.removeEventListener("mouseover", startMouseOver, false);
+    this.canvas.removeEventListener("mousemove", moveMouse, false);
     startMouse = getMousePos(event);
   }.bind(this);
 
@@ -626,13 +628,55 @@ function Graph(value, width, height, rangeX, rangeY) {
   }.bind(this);
 
   var endDrag = function(event) {
-    this.canvas.removeEventListener("mousemove", dragMouse, false);
+    document.removeEventListener("mousemove", dragMouse, false);
     document.removeEventListener("mouseup", endDrag, false);
+    this.canvas.addEventListener("mouseover", startMouseOver, false);
+    this.canvas.addEventListener("mousemove", moveMouse, false);
     var mousePos = getMousePos(event);
 
     var offsetX = ((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
     var offsetY = ((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
     this.setRange(this.x1-offsetX, this.x2-offsetX, this.y1+offsetY, this.y2+offsetY);
+  }.bind(this);
+
+  var startMouseOver = function(event) {
+    this.canvas.addEventListener("mousemove", moveMouse, false);
+    this.canvas.addEventListener("mouseout", endMouseOver, false);
+  }.bind(this);
+
+  var moveMouse = function(event) {
+    stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    stage.putImageData(img, 0, 0);
+    var mousePos = getMousePos(event);
+    var offsetY = -this.y1;
+
+    //Draw the coordinate
+    stage.fillStyle="#2980b9";
+    stage.beginPath();
+    stage.arc(mousePos.x, this.canvas.height-((this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].y+offsetY)/(this.y2-this.y1))*this.canvas.height, 4, 0, 2*Math.PI);
+    stage.closePath();
+    stage.fill();
+    stage.fillStyle="#000";
+    stage.strokeStyle="#FFF";
+    stage.lineWidth=4;
+    var txt="(" + (Math.round(this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].x*100)/100).toFixed(2) + ", " + (Math.round(this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].y*100)/100).toFixed(2) + ")";
+
+    if (mousePos.x<stage.measureText(txt).width/2+2) {
+      stage.textAlign = "left";
+    } else if (mousePos.x>this.canvas.width-stage.measureText(txt).width/2-2) {
+      stage.textAlign = "right";
+    } else {
+      stage.textAlign = "center";
+    }
+    stage.strokeText(txt, mousePos.x, -10+this.canvas.height-((this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].y+offsetY)/(this.y2-this.y1))*this.canvas.height);
+    stage.fillText(txt, mousePos.x, -10+this.canvas.height-((this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].y+offsetY)/(this.y2-this.y1))*this.canvas.height);
+  }.bind(this);
+
+  var endMouseOver = function(event) {
+    this.canvas.removeEventListener("mousemove", moveMouse, false);
+    this.canvas.removeEventListener("mouseout", endMouseOver, false);
+    stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    stage.putImageData(img, 0, 0);
   }.bind(this);
 
   //Returns the canvas element
@@ -645,13 +689,14 @@ function Graph(value, width, height, rangeX, rangeY) {
 
     //Get the canvas context to draw onto
     stage = this.canvas.getContext("2d");
+    stage.font = "12px sans-serif";
     this.canvas.style.backgroundColor="#FFF";
 
     //Make points
     this.update();
 
     this.canvas.addEventListener("mousedown", startDrag, false);
-
+    this.canvas.addEventListener("mouseover", startMouseOver, false);
   } else {
     console.log("Canvas not supported in this browser.");
     this.canvas = document.createElement("div");
