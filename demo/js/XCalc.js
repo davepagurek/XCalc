@@ -468,6 +468,8 @@ function Graph(value, width, height, rangeX, rangeY) {
   this.y1 = 0-Math.abs(rangeY);
   this.y2 = 0+Math.abs(rangeY);
   var startMouse = new Point(0, 0);
+  var mousePos = new Point(0, 0);
+  var timer=0;
   var stage=0;
   var img=0;
   var magnitudeX = 0;
@@ -676,23 +678,27 @@ function Graph(value, width, height, rangeX, rangeY) {
     startMouse = getMousePos(event);
   }.bind(this);
 
+  var redrawLine = function() {
+    var offsetX = ((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
+    var offsetY = ((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
+    this.setRange(this.x1-offsetX, this.x2-offsetX, this.y1+offsetY, this.y2+offsetY);
+    startMouse = mousePos;
+  }.bind(this);
+
   var dragMouse = function(event) {
     stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    var mousePos = getMousePos(event);
+    mousePos = getMousePos(event);
     var newx1 = this.x1-((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
     var newx2 = this.x2-((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
     var newy1 = this.y1+((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
     var newy2 = this.y2+((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
 
+    drawAxes(newx1, newx2, newy1, newy2, false);
+    stage.putImageData(img, mousePos.x-startMouse.x, mousePos.y-startMouse.y);
     if (Math.abs(newx1-this.x1)>this.canvas.width/2 || Math.abs(newy1-this.y1)>this.canvas.height/2) {
-      var offsetX = ((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
-      var offsetY = ((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
-      this.setRange(this.x1-offsetX, this.x2-offsetX, this.y1+offsetY, this.y2+offsetY);
-      startMouse = mousePos;
-    } else {
-      drawAxes(newx1, newx2, newy1, newy2, false);
-      stage.putImageData(img, mousePos.x-startMouse.x, mousePos.y-startMouse.y);
+      timer = setTimeout(redrawLine, 100);
     }
+    
   }.bind(this);
 
   var endDrag = function(event) {
@@ -700,7 +706,7 @@ function Graph(value, width, height, rangeX, rangeY) {
     document.removeEventListener("mouseup", endDrag, false);
     this.canvas.addEventListener("mouseover", startMouseOver, false);
     this.canvas.addEventListener("mousemove", moveMouse, false);
-    var mousePos = getMousePos(event);
+    mousePos = getMousePos(event);
 
     var offsetX = ((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
     var offsetY = ((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
@@ -715,7 +721,7 @@ function Graph(value, width, height, rangeX, rangeY) {
   var moveMouse = function(event) {
     stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
     stage.putImageData(img, 0, 0);
-    var mousePos = getMousePos(event);
+    mousePos = getMousePos(event);
     var offsetY = -this.y1;
 
     //Draw the coordinate

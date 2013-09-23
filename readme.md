@@ -1,10 +1,15 @@
 <h1>XCalc.js</h1>
 Mathematical Expression Calculator by Dave Pagurek
 
+<h2>Files</h2>
+The <strong>demo</strong> directory has an example graphing calculator built on XCalc.js, as well as the uncompressed XCalc.js file for adding new features.
+
+The <strong>release</strong> directory has XCalc.min.js, a much smaller file than the regular XCalc.js, but unsuitable for editing.
+
 <h2>Usage</h2>
 Add the following to your head tag:
 ```HTML
-<script src="js/XCalc.js"></script>
+<script src="XCalc.min.js"></script>
 ```
 
 <h3>Expressions</h3>
@@ -50,7 +55,7 @@ var graph = XCalc.graphExpression(expression, width, height, rangeX, rangeY);
 
 
 <h2>Operations Supported</h2>
-As of version 1.7:
+As of version 1.9:
 <ul>
 	<li>Addition (x+y)</li>
 	<li>Subtraction (x-y)</li>

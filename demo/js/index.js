@@ -13,7 +13,14 @@ function simplifyText(event) {
   }
 }
 
+function onKeyUp(event) {
+  if (event.keyCode==13) {
+    simplifyText();
+  }
+}
+
 window.onload = function() {
   document.getElementById("simplify").addEventListener("click", simplifyText);
+  document.getElementById("input").addEventListener("keyup", onKeyUp);
   simplifyText();
 };
