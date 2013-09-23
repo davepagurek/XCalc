@@ -537,24 +537,24 @@ function Graph(value, width, height, rangeX, rangeY) {
   var drawAxes = function(_x1, _x2, _y1, _y2, redraw) {
     stage.strokeStyle="#bdc3c7";
     stage.fillStyle="#bdc3c7";
-    stage.textAlign = "right";
 
     //Draw the y axis if it is in the view
-    if (0>=_x1 && 0<=_x2) {
+    if (0>=_x1-30 && 0<=_x2+30) {
       stage.lineWidth=2;
       stage.beginPath();
       stage.moveTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width, 0);
       stage.lineTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width, this.canvas.height);
       stage.closePath();
       stage.stroke();
+      stage.textAlign = "right";
       stage.textBaseline="middle";
 
       stage.lineWidth=1;
       var limit = (Math.abs(_y2)>Math.abs(_y1))?Math.abs(_y2):Math.abs(_y1);
       for (var i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_y2-_y1) / Math.LN10))/4) {
         if (i==0) continue;
-        if (i<=_y2) {
-          if (redraw || (i>=this.y2)) {
+        if (i<=_y2+50) {
+          if (redraw || (i>=this.y2-50)) {
             stage.beginPath();
             stage.moveTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width-5, this.canvas.height-((i-_y1)/(_y2-_y1))*this.canvas.height);
             stage.lineTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width+5, this.canvas.height-((i-_y1)/(_y2-_y1))*this.canvas.height);
@@ -564,8 +564,8 @@ function Graph(value, width, height, rangeX, rangeY) {
           }
         }
 
-        if (i>=_y1) {
-          if (redraw || (-i<=this.y1)) {
+        if (i>=_y1-50) {
+          if (redraw || (-i<=this.y1+50)) {
             stage.beginPath();
             stage.moveTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width-5, this.canvas.height-((-i-_y1)/(_y2-_y1))*this.canvas.height);
             stage.lineTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width+5, this.canvas.height-((-i-_y1)/(_y2-_y1))*this.canvas.height);
@@ -578,38 +578,39 @@ function Graph(value, width, height, rangeX, rangeY) {
     }
 
     //Draw the x axis if it is in the view
-    if (0>=_y1 && 0<=_y2) {
+    if (0>=_y1-50 && 0<=_y2+50) {
       stage.lineWidth=2;
       stage.beginPath();
       stage.moveTo(0, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height);
       stage.lineTo(this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height);
       stage.closePath();
       stage.stroke();
+      stage.textAlign = "center";
       stage.textBaseline="top";
 
       stage.lineWidth=1;
       var limit = (Math.abs(_x2)>Math.abs(_x1))?Math.abs(_x2):Math.abs(_x1);
       for (var i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_x2-_x1) / Math.LN10))/4) {
         if (i==0) continue;
-        if (i<=_x2) {
-          if (redraw || (i>=this.x2)) {
+        if (i<=_x2+50) {
+          if (redraw || (i>=this.x2-50)) {
             stage.beginPath();
-            stage.moveTo(this.canvas.width-((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height-5);
-            stage.lineTo(this.canvas.width-((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+5);
+            stage.moveTo(((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height-5);
+            stage.lineTo(((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+5);
             stage.closePath();
             stage.stroke();
-            stage.fillText(""+(Math.round(i*100)/100), this.canvas.width-((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+8);
+            stage.fillText(""+(Math.round(i*100)/100), ((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+8);
           }
         }
 
-        if (i>=_x1) {
-          if (redraw || (-i<=this.x1)) {
+        if (i>=_x1-50) {
+          if (redraw || (-i<=this.x1+50)) {
             stage.beginPath();
-            stage.moveTo(this.canvas.width-((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height-5);
-            stage.lineTo(this.canvas.width-((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+5);
+            stage.moveTo(((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height-5);
+            stage.lineTo(((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+5);
             stage.closePath();
             stage.stroke();
-            stage.fillText(""+(Math.round(-i*100)/100), this.canvas.width-((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+8);
+            stage.fillText(""+(Math.round(-i*100)/100), ((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+8);
           }
         }
       }
@@ -681,9 +682,15 @@ function Graph(value, width, height, rangeX, rangeY) {
     var newy1 = this.y1+((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
     var newy2 = this.y2+((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
 
-    drawAxes(newx1, newx2, newy1, newy2, false);
-
-    stage.putImageData(img, mousePos.x-startMouse.x, mousePos.y-startMouse.y);
+    if (Math.abs(newx1-this.x1)>this.canvas.width/2 || Math.abs(newy1-this.y1)>this.canvas.height/2) {
+      var offsetX = ((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
+      var offsetY = ((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
+      this.setRange(this.x1-offsetX, this.x2-offsetX, this.y1+offsetY, this.y2+offsetY);
+      startMouse = mousePos;
+    } else {
+      drawAxes(newx1, newx2, newy1, newy2, false);
+      stage.putImageData(img, mousePos.x-startMouse.x, mousePos.y-startMouse.y);
+    }
   }.bind(this);
 
   var endDrag = function(event) {
