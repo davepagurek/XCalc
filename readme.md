@@ -2,9 +2,9 @@
 Mathematical Expression Calculator by Dave Pagurek
 
 <h2>Files</h2>
-The <strong>demo</strong> directory has an example graphing calculator built on XCalc.js, as well as the uncompressed XCalc.js file for adding new features.
+The <strong>project</strong> directory has an example graphing calculator built on XCalc.js, as well as the uncompressed XCalc.js file for adding new features.
 
-The <strong>release</strong> directory has XCalc.min.js, a much smaller file than the regular XCalc.js, but unsuitable for editing.
+The <strong>min</strong> directory has XCalc.min.js, a much smaller file than the regular XCalc.js, but unsuitable for editing.
 
 <h2>Usage</h2>
 Add the following to your head tag:
