@@ -537,6 +537,8 @@ function Graph(value, width, height, rangeX, rangeY) {
   var drawAxes = function(_x1, _x2, _y1, _y2, redraw) {
     stage.strokeStyle="#bdc3c7";
     stage.fillStyle="#bdc3c7";
+    var limit=0;
+    var i=0;
 
     //Draw the y axis if it is in the view
     if (0>=_x1-30 && 0<=_x2+30) {
@@ -550,9 +552,9 @@ function Graph(value, width, height, rangeX, rangeY) {
       stage.textBaseline="middle";
 
       stage.lineWidth=1;
-      var limit = (Math.abs(_y2)>Math.abs(_y1))?Math.abs(_y2):Math.abs(_y1);
-      for (var i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_y2-_y1) / Math.LN10))/4) {
-        if (i==0) continue;
+      limit = (Math.abs(_y2)>Math.abs(_y1))?Math.abs(_y2):Math.abs(_y1);
+      for (i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_y2-_y1) / Math.LN10))/4) {
+        if (i===0) continue;
         if (i<=_y2+50) {
           if (redraw || (i>=this.y2-50)) {
             stage.beginPath();
@@ -589,9 +591,9 @@ function Graph(value, width, height, rangeX, rangeY) {
       stage.textBaseline="top";
 
       stage.lineWidth=1;
-      var limit = (Math.abs(_x2)>Math.abs(_x1))?Math.abs(_x2):Math.abs(_x1);
-      for (var i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_x2-_x1) / Math.LN10))/4) {
-        if (i==0) continue;
+      limit = (Math.abs(_x2)>Math.abs(_x1))?Math.abs(_x2):Math.abs(_x1);
+      for (i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_x2-_x1) / Math.LN10))/4) {
+        if (i===0) continue;
         if (i<=_x2+50) {
           if (redraw || (i>=this.x2-50)) {
             stage.beginPath();
