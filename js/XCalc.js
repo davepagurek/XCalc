@@ -411,7 +411,7 @@ function Segment(input) {
 
       //If there are no operators, just push the input itself
       } else {
-        var xLocation=input.indexOf("x");
+        var xLocation=input.toLowerCase().indexOf("x");
         if (xLocation!=-1) {
           if (xLocation>0) {
             this.sections.push(new Segment(input.substring(0, xLocation)));
