@@ -681,6 +681,9 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
       drawAxes(newx1, newx2, newy1, newy2, false);
       stage.putImageData(img, mousePos.x-startMouse.x, mousePos.y-startMouse.y);
     }
+
+    if (event.preventDefault) event.preventDefault();
+    return false;
     
   }.bind(this);
 
@@ -751,6 +754,8 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
     var distX = delta*(x2-x1)/25;
     var distY = delta*(y2-y1)/25;
     this.setRange(x1 + distX, x2 - distX, y1 + distY, y2 - distY);
+    if (event.preventDefault) event.preventDefault();
+    return false;
   }.bind(this);
 
   //Returns the canvas element
