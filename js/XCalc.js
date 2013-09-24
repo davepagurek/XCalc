@@ -711,6 +711,8 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
     stage.clearRect(0, 0, canvas.width, canvas.height);
     stage.putImageData(img, 0, 0);
     mousePos = getMousePos(event);
+    if (mousePos.x<0) mousePos.x=0;
+    if (mousePos.y<0) mousePos.y=0;
     var offsetY = -y1;
 
     //Draw the coordinate
