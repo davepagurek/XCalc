@@ -2,7 +2,7 @@
 function Operator(input) {
   this.operator = input;
   if (!input) {
-    console.log("Operator has no input.");
+    XCalc.log("Operator has no input.");
   }
 
   this.solve = function(segment1, segment2, x) {
@@ -32,7 +32,7 @@ function Operator(input) {
 function MathFunction(input) {
   this.f=input;
   if (!input) {
-    console.log("Math function has no input.");
+    XCalc.log("Math function has no input.");
   }
 
   this.solve = function(segment) {
@@ -280,25 +280,7 @@ function Segment(input) {
     return this.solve(x).coefficient;
   };
 
-  this.display = function(x) {
-    if (this.type=="value") return this.coefficient;
-    if (this.type=="variable") return "x";
-    if (this.type=="function") return this.mathFunction.f;
-    var str = "<div class='group'>";
-    for (var i=0; i<this.sections.length; i++) {
-      str+=this.sections[i].display(x);
-      if (i===0 && this.operator) {
-        str+="<div class='group operator'>" + this.operator.operator + "</div>";
-      }
-    }
-    str+="<div class='answer'>= " + this.solve().coefficient + "</div>";
-    str+="</div>";
-    return str;
-  };
-
-
-
-  //constructor
+  //constructor: parse the string
   if (input!==undefined) {
     if (typeof(input)=="string") {
       //Remove excess whitespace
@@ -333,7 +315,7 @@ function Segment(input) {
       if (abs>multiplication) functionMultiplication=abs;
 
       //Push back each half of the equation into a section, in reverse order of operations
-      if (addition != -1 && (subtraction == -1 || addition>subtraction)) {
+      if (addition != -1 && addition>subtraction) {
         this.sections.push(new Segment(input.substring(0, addition)));
         this.sections.push(new Segment(input.substring(addition+1)));
         this.operator = new Operator("+");
@@ -345,15 +327,15 @@ function Segment(input) {
         }
         this.sections.push(new Segment(input.substring(subtraction+1)));
         this.operator = new Operator("-");
-      } else if (functionMultiplication >0 && functionMultiplication > multiplication && functionMultiplication > division) {
+      } else if (functionMultiplication > 0 && Math.max(functionMultiplication, multiplication, multiplication2, division)==functionMultiplication) {
         this.sections.push(new Segment(input.substring(0, functionMultiplication)));
         this.sections.push(new Segment(input.substring(functionMultiplication)));
         this.operator = new Operator("*");
-      } else if (multiplication2 != -1 && (division == -1 || multiplication>division) && (multiplication == -1 || multiplication2>multiplication)) {
+      } else if (multiplication2 != -1 && Math.max(multiplication2, multiplication, division)==multiplication2) {
         this.sections.push(new Segment(input.substring(0, multiplication2)));
         this.sections.push(new Segment(input.substring(multiplication2)));
         this.operator = new Operator("*");
-      } else if (multiplication != -1 && (division == -1 || multiplication>division)) {
+      } else if (multiplication != -1 && multiplication>division) {
         this.sections.push(new Segment(input.substring(0, multiplication)));
         this.sections.push(new Segment(input.substring(multiplication+1)));
         this.operator = new Operator("*");
@@ -365,27 +347,27 @@ function Segment(input) {
         this.sections.push(new Segment(input.substring(0, exponent)));
         this.sections.push(new Segment(input.substring(exponent+1)));
         this.operator = new Operator("^");
-      } else if (sin != -1 && (cos == -1 || sin>cos) && (tan == -1 || sin>tan) && (asin == -1 || sin>asin) && (acos == -1 || sin>acos) && (atan == -1 || sin>atan) && (abs == -1 || sin>abs)) {
+      } else if (sin != -1 && Math.max(sin, cos, tan, asin, acos, atan, abs)==sin) {
         this.sections.push(new Segment(input.substring(sin+3)));
         this.mathFunction = new MathFunction("sin");
         this.type = "function";
-      } else if (cos != -1 && (tan == -1 || cos>tan) && (asin == -1 || cos>asin) && (acos == -1 || cos>acos) && (atan == -1 || cos>atan) && (abs == -1 || cos>abs)) {
+      } else if (cos != -1 && Math.max(cos, tan, asin, acos, atan, abs)==cos) {
         this.sections.push(new Segment(input.substring(cos+3)));
         this.mathFunction = new MathFunction("cos");
         this.type = "function";
-      } else if (tan != -1 && (asin == -1 || tan>asin) && (acos == -1 || tan>acos) && (atan == -1 || tan>atan) && (abs == -1 || tan>abs)) {
+      } else if (tan != -1 && Math.max(tan, asin, acos, atan, abs)==tan) {
         this.sections.push(new Segment(input.substring(tan+3)));
         this.mathFunction = new MathFunction("tan");
         this.type = "function";
-      } else if (asin != -1 && (acos == -1 || asin>acos) && (atan == -1 || asin>atan) && (abs == -1 || asin>abs)) {
+      } else if (asin != -1 && Math.max(asin, acos, atan, abs)==asin) {
         this.sections.push(new Segment(input.substring(asin+4)));
         this.mathFunction = new MathFunction("asin");
         this.type = "function";
-      } else if (acos != -1 && (atan == -1 || acos>atan) && (abs == -1 || acos>abs)) {
+      } else if (acos != -1 && Math.max(acos, atan, abs)==acos) {
         this.sections.push(new Segment(input.substring(acos+4)));
         this.mathFunction = new MathFunction("acos");
         this.type = "function";
-      } else if (atan != -1 && (abs == -1 || atan>abs)) {
+      } else if (atan != -1 && atan>abs) {
         this.sections.push(new Segment(input.substring(atan+4)));
         this.mathFunction = new MathFunction("atan");
         this.type = "function";
@@ -406,7 +388,7 @@ function Segment(input) {
           if (bracket2!=input.length-1) this.sections.push(new Segment(input.substring(bracket2+1)));
           this.operator = new Operator("*");
         } else {
-          console.log("Brackets nesting error: " + input);
+          XCalc.log("Brackets nesting error: " + input);
         }
 
       //If there are no operators, just push the input itself
@@ -431,7 +413,7 @@ function Segment(input) {
       this.type = "value";
     }
   } else {
-    console.log("Segment has no input.");
+    XCalc.log("Segment has no input.");
   }
 }
 
@@ -444,94 +426,80 @@ function Point(x, y) {
 
 
 //MathFunction to create graphs
-function Graph(value, width, height, rangeX, rangeY) {
-  var autoRange=false;
-
-  //Default params
-  if (rangeX===undefined) {
-    rangeX=10;
-  }
-  if (rangeY===undefined) {
-    autoRange = true;
-  }
+function Graph(value, width, height, startx1, startx2, starty1, starty2) {
+  var autoRange=(starty1===undefined || starty1=="auto");
 
   //Properties
   this.expression = new Segment(value);
-  this.points = [];
-  this.canvas = document.createElement("canvas");
-  this.canvas.width=width || 400;
-  this.canvas.height=height || 400;
-  this.min=undefined;
-  this.max=undefined;
-  this.x1 = 0-Math.abs(rangeX);
-  this.x2 = 0+Math.abs(rangeX);
-  this.y1 = 0-Math.abs(rangeY);
-  this.y2 = 0+Math.abs(rangeY);
+  var points = [];
+  var canvas = document.createElement("canvas");
+  canvas.width=width || 400;
+  canvas.height=height || 400;
+  var min;
+  var max;
+  var x1 = startx1 || -10;
+  var x2 = startx2 || 10;
+  var y1 = starty1 || -10;
+  var y2 = starty2 || 10;
   var startMouse = new Point(0, 0);
   var mousePos = new Point(0, 0);
-  var timer=0;
   var stage=0;
   var img=0;
-  var magnitudeX = 0;
-  var magnitudeY = 0;
 
   //Gets minimum y value in the set of points
   this.getMin = function() {
-    if (this.min===undefined) {
-      if (this.points.length>0) {
-        var min = this.points[0].y;
-        for (var i=1; i<this.points.length; i++) {
-          if (this.points[i].y<min) min = this.points[i].y;
+    if (min===undefined) {
+      if (points.length>0) {
+        var _min = points[0].y;
+        for (var i=1; i<points.length; i++) {
+          if (points[i].y<_min) _min = points[i].y;
         }
-        this.min=min;
+        min=_min;
         return min;
       } else {
         return 0;
       }
     } else {
-      return this.min;
+      return min;
     }
   };
 
   //Gets maximum y value in the set of points
   this.getMax = function() {
-    if (this.max===undefined) {
-      if (this.points.length>0) {
-        var max = this.points[0].y;
-        for (var i=1; i<this.points.length; i++) {
-          if (this.points[i].y>max) max = this.points[i].y;
+    if (max===undefined) {
+      if (points.length>0) {
+        var _max = points[0].y;
+        for (var i=1; i<points.length; i++) {
+          if (points[i].y>_max) _max = points[i].y;
         }
-        this.max=max;
+        max=_max;
         return max;
       } else {
         return 0;
       }
     } else {
-      return this.max;
+      return max;
     }
   };
 
   //Updates the points and graph
   this.update = function() {
-    var accuracy = (this.x2-this.x1)/this.canvas.width;
-    this.points = [];
-    for (var i=this.x1; i<=this.x2; i+=accuracy) {
-      this.points.push(new Point(i, this.expression.result(i)));
+    var accuracy = (x2-x1)/canvas.width;
+    points = [];
+    for (var i=x1; i<=x2; i+=accuracy) {
+      points.push(new Point(i, this.expression.result(i)));
     }
 
     if (autoRange) {
       if (this.getMax()-this.getMin()>100000) {
-        this.y1=-100;
-        this.y2=100;
+        y1=-100;
+        y2=100;
       } else {
-        this.y1=this.getMin()-5;
-        this.y2=this.getMax()+5;
+        y1=this.getMin()-5;
+        y2=this.getMax()+5;
       }
       autoRange = false;
     }
-
-    magnitudeX = Math.ceil(Math.log(this.x2-this.x1));
-    magnitudeY = Math.ceil(Math.log(this.y2-this.y1));
 
     this.redraw();
   };
@@ -546,36 +514,37 @@ function Graph(value, width, height, rangeX, rangeY) {
     if (0>=_x1-30 && 0<=_x2+30) {
       stage.lineWidth=2;
       stage.beginPath();
-      stage.moveTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width, 0);
-      stage.lineTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width, this.canvas.height);
+      stage.moveTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width, 0);
+      stage.lineTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width, canvas.height);
       stage.closePath();
       stage.stroke();
       stage.textAlign = "right";
       stage.textBaseline="middle";
 
+      //Draw ticks and numbers on x axis
       stage.lineWidth=1;
       limit = (Math.abs(_y2)>Math.abs(_y1))?Math.abs(_y2):Math.abs(_y1);
-      for (i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_y2-_y1) / Math.LN10))/4) {
+      for (i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_y2-_y1) / Math.LN10))/2) {
         if (i===0) continue;
         if (i<=_y2+50) {
-          if (redraw || (i>=this.y2-50)) {
+          if (redraw || (i>=y2-50)) {
             stage.beginPath();
-            stage.moveTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width-5, this.canvas.height-((i-_y1)/(_y2-_y1))*this.canvas.height);
-            stage.lineTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width+5, this.canvas.height-((i-_y1)/(_y2-_y1))*this.canvas.height);
+            stage.moveTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-5, canvas.height-((i-_y1)/(_y2-_y1))*canvas.height);
+            stage.lineTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width+5, canvas.height-((i-_y1)/(_y2-_y1))*canvas.height);
             stage.closePath();
             stage.stroke();
-            stage.fillText(""+(Math.round(i*100)/100), this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width-8, this.canvas.height-((i-_y1)/(_y2-_y1))*this.canvas.height);
+            stage.fillText(""+(Math.round(i*100)/100), canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-8, canvas.height-((i-_y1)/(_y2-_y1))*canvas.height);
           }
         }
 
         if (i>=_y1-50) {
-          if (redraw || (-i<=this.y1+50)) {
+          if (redraw || (-i<=y1+50)) {
             stage.beginPath();
-            stage.moveTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width-5, this.canvas.height-((-i-_y1)/(_y2-_y1))*this.canvas.height);
-            stage.lineTo(this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width+5, this.canvas.height-((-i-_y1)/(_y2-_y1))*this.canvas.height);
+            stage.moveTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-5, canvas.height-((-i-_y1)/(_y2-_y1))*canvas.height);
+            stage.lineTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width+5, canvas.height-((-i-_y1)/(_y2-_y1))*canvas.height);
             stage.closePath();
             stage.stroke();
-            stage.fillText(""+(Math.round(-i*100)/100), this.canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*this.canvas.width-8, this.canvas.height-((-i-_y1)/(_y2-_y1))*this.canvas.height);
+            stage.fillText(""+(Math.round(-i*100)/100), canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-8, canvas.height-((-i-_y1)/(_y2-_y1))*canvas.height);
           }
         }
       }
@@ -585,36 +554,37 @@ function Graph(value, width, height, rangeX, rangeY) {
     if (0>=_y1-50 && 0<=_y2+50) {
       stage.lineWidth=2;
       stage.beginPath();
-      stage.moveTo(0, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height);
-      stage.lineTo(this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height);
+      stage.moveTo(0, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height);
+      stage.lineTo(canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height);
       stage.closePath();
       stage.stroke();
       stage.textAlign = "center";
       stage.textBaseline="top";
 
+      //Draw ticks and numbers on y axis
       stage.lineWidth=1;
       limit = (Math.abs(_x2)>Math.abs(_x1))?Math.abs(_x2):Math.abs(_x1);
-      for (i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_x2-_x1) / Math.LN10))/4) {
+      for (i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_x2-_x1) / Math.LN10))/2) {
         if (i===0) continue;
         if (i<=_x2+50) {
-          if (redraw || (i>=this.x2-50)) {
+          if (redraw || (i>=x2-50)) {
             stage.beginPath();
-            stage.moveTo(((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height-5);
-            stage.lineTo(((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+5);
+            stage.moveTo(((i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height-5);
+            stage.lineTo(((i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+5);
             stage.closePath();
             stage.stroke();
-            stage.fillText(""+(Math.round(i*100)/100), ((i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+8);
+            stage.fillText(""+(Math.round(i*100)/100), ((i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+8);
           }
         }
 
         if (i>=_x1-50) {
-          if (redraw || (-i<=this.x1+50)) {
+          if (redraw || (-i<=x1+50)) {
             stage.beginPath();
-            stage.moveTo(((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height-5);
-            stage.lineTo(((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+5);
+            stage.moveTo(((-i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height-5);
+            stage.lineTo(((-i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+5);
             stage.closePath();
             stage.stroke();
-            stage.fillText(""+(Math.round(-i*100)/100), ((-i-_x1)/(_x2-_x1))*this.canvas.width, this.canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*this.canvas.height+8);
+            stage.fillText(""+(Math.round(-i*100)/100), ((-i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+8);
           }
         }
       }
@@ -623,44 +593,47 @@ function Graph(value, width, height, rangeX, rangeY) {
 
   //Updates the canvas
   this.redraw = function() {
-    if (this.points.length>1) {
-      stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    if (points.length>1) {
+      stage.clearRect(0, 0, canvas.width, canvas.height);
       stage.lineCap="round";
 
-      var offsetY = -this.y1;
+      var offsetY = -y1;
 
-      drawAxes(this.x1, this.x2, this.y1, this.y2, true);
+      drawAxes(x1, x2, y1, y2, true);
 
       //Draw all the points
       stage.strokeStyle="#2980b9";
       stage.lineWidth=1;
       stage.beginPath();
-      stage.moveTo(0, this.canvas.height-((this.points[0].y+offsetY)/(this.y2-this.y1))*this.canvas.height);
-      for (var i=1; i<this.points.length; i++) {
-        if (Math.abs((this.canvas.height-((this.points[i].y+offsetY)/(this.y2-this.y1))*this.canvas.height)-(this.canvas.height-((this.points[i-1].y+offsetY)/(this.y2-this.y1))*this.canvas.height))<=this.canvas.height) {
-          stage.lineTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offsetY)/(this.y2-this.y1))*this.canvas.height);
+      stage.moveTo(0, canvas.height-((points[0].y+offsetY)/(y2-y1))*canvas.height);
+      for (var i=1; i<points.length; i++) {
+        if (Math.abs((canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height)-(canvas.height-((points[i-1].y+offsetY)/(y2-y1))*canvas.height))<=canvas.height) {
+          stage.lineTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
         }
-        stage.moveTo((i/this.points.length)*this.canvas.width, this.canvas.height-((this.points[i].y+offsetY)/(this.y2-this.y1))*this.canvas.height);
+        stage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
       }
       stage.closePath();
       stage.stroke();
 
-      img = stage.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      img = stage.getImageData(0, 0, canvas.width, canvas.height);
     } else {
-      console.log("Not enough points to graph.");
+      XCalc.log("Not enough points to graph.");
     }
   };
 
+  //Updates the view of the graph
   this.setRange = function(_x1, _x2, _y1, _y2) {
-    this.x1=_x1;
-    this.x2=_x2;
-    this.y1=_y1;
-    this.y2=_y2;
+    x1=_x1;
+    x2=_x2;
+    y1=_y1;
+    y2=_y2;
+    if (_y1=="auto" || _y1===undefined) autoRange=true;
     this.update();
   };
 
+  //Gets x and y of the mouse relative to the top left of the canvas
   var getMousePos = function(evt) {
-      var rect = this.canvas.getBoundingClientRect();
+      var rect = canvas.getBoundingClientRect();
       var root = document.documentElement;
       
       // return relative mouse position
@@ -670,118 +643,190 @@ function Graph(value, width, height, rangeX, rangeY) {
       return new Point(mouseX, mouseY);
   }.bind(this);
 
+  //Starts panning
   var startDrag = function(event) {
     document.addEventListener("mousemove", dragMouse, false);
     document.addEventListener("mouseup", endDrag, false);
-    this.canvas.removeEventListener("mouseover", startMouseOver, false);
-    this.canvas.removeEventListener("mousemove", moveMouse, false);
+    document.documentElement.style["-moz-user-select"] = "none";
+    document.documentElement.style["-webkit-user-select"] = "none";
+    document.documentElement.style["-khtml-user-select"] = "none";
+    document.documentElement.style["user-select"] = "none";
+    canvas.removeEventListener("mouseover", startMouseOver, false);
+    canvas.removeEventListener("mousemove", moveMouse, false);
     startMouse = getMousePos(event);
   }.bind(this);
 
+  //Recalculate and redraws the view based on the mouse position
   var redrawLine = function() {
-    var offsetX = ((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
-    var offsetY = ((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
-    this.setRange(this.x1-offsetX, this.x2-offsetX, this.y1+offsetY, this.y2+offsetY);
+    var offsetX = ((mousePos.x-startMouse.x)/canvas.width)*(x2-x1);
+    var offsetY = ((mousePos.y-startMouse.y)/canvas.height)*(y2-y1);
+    this.setRange(x1-offsetX, x2-offsetX, y1+offsetY, y2+offsetY);
     startMouse = mousePos;
   }.bind(this);
 
   var dragMouse = function(event) {
-    stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    stage.clearRect(0, 0, canvas.width, canvas.height);
     mousePos = getMousePos(event);
-    var newx1 = this.x1-((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
-    var newx2 = this.x2-((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
-    var newy1 = this.y1+((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
-    var newy2 = this.y2+((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
+    var newx1 = x1-((mousePos.x-startMouse.x)/canvas.width)*(x2-x1);
+    var newx2 = x2-((mousePos.x-startMouse.x)/canvas.width)*(x2-x1);
+    var newy1 = y1+((mousePos.y-startMouse.y)/canvas.height)*(y2-y1);
+    var newy2 = y2+((mousePos.y-startMouse.y)/canvas.height)*(y2-y1);
 
-    drawAxes(newx1, newx2, newy1, newy2, false);
-    stage.putImageData(img, mousePos.x-startMouse.x, mousePos.y-startMouse.y);
-    if (Math.abs(newx1-this.x1)>this.canvas.width/2 || Math.abs(newy1-this.y1)>this.canvas.height/2) {
-      timer = setTimeout(redrawLine, 100);
+    //If it's been dragged far enough, recalculate the line
+    if (Math.abs(mousePos.x-startMouse.x)>canvas.width*0.2 || Math.abs(mousePos.y-startMouse.y)>canvas.height*0.2) {
+      redrawLine();
+
+    //Otherwise, move around the drawing we already have
+    } else {
+      drawAxes(newx1, newx2, newy1, newy2, false);
+      stage.putImageData(img, mousePos.x-startMouse.x, mousePos.y-startMouse.y);
     }
     
   }.bind(this);
 
+  //Stops dragging, resets listeners
   var endDrag = function(event) {
     document.removeEventListener("mousemove", dragMouse, false);
     document.removeEventListener("mouseup", endDrag, false);
-    this.canvas.addEventListener("mouseover", startMouseOver, false);
-    this.canvas.addEventListener("mousemove", moveMouse, false);
+    document.documentElement.style["-moz-user-select"] = "auto";
+    document.documentElement.style["-webkit-user-select"] = "auto";
+    document.documentElement.style["-khtml-user-select"] = "auto";
+    document.documentElement.style["user-select"] = "auto";
+    canvas.addEventListener("mouseover", startMouseOver, false);
+    canvas.addEventListener("mousemove", moveMouse, false);
     mousePos = getMousePos(event);
 
-    var offsetX = ((mousePos.x-startMouse.x)/this.canvas.width)*(this.x2-this.x1);
-    var offsetY = ((mousePos.y-startMouse.y)/this.canvas.height)*(this.y2-this.y1);
-    this.setRange(this.x1-offsetX, this.x2-offsetX, this.y1+offsetY, this.y2+offsetY);
+    var offsetX = ((mousePos.x-startMouse.x)/canvas.width)*(x2-x1);
+    var offsetY = ((mousePos.y-startMouse.y)/canvas.height)*(y2-y1);
+    this.setRange(x1-offsetX, x2-offsetX, y1+offsetY, y2+offsetY);
   }.bind(this);
 
   var startMouseOver = function(event) {
-    this.canvas.addEventListener("mousemove", moveMouse, false);
-    this.canvas.addEventListener("mouseout", endMouseOver, false);
+    canvas.addEventListener("mousemove", moveMouse, false);
+    canvas.addEventListener("mouseout", endMouseOver, false);
   }.bind(this);
 
+  //Draws coordinates over point
   var moveMouse = function(event) {
-    stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    stage.clearRect(0, 0, canvas.width, canvas.height);
     stage.putImageData(img, 0, 0);
     mousePos = getMousePos(event);
-    var offsetY = -this.y1;
+    var offsetY = -y1;
 
     //Draw the coordinate
     stage.fillStyle="#2980b9";
     stage.beginPath();
-    stage.arc(mousePos.x, this.canvas.height-((this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].y+offsetY)/(this.y2-this.y1))*this.canvas.height, 4, 0, 2*Math.PI);
+    stage.arc(mousePos.x, canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height, 4, 0, 2*Math.PI);
     stage.closePath();
     stage.fill();
     stage.fillStyle="#000";
     stage.strokeStyle="#FFF";
     stage.lineWidth=4;
     stage.textBaseline="alphabetic";
-    var txt="(" + (Math.round(this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].x*100)/100).toFixed(2) + ", " + (Math.round(this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].y*100)/100).toFixed(2) + ")";
+    var txt="(" + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].x*100)/100).toFixed(2) + ", " + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].y*100)/100).toFixed(2) + ")";
 
     if (mousePos.x<stage.measureText(txt).width/2+2) {
       stage.textAlign = "left";
-    } else if (mousePos.x>this.canvas.width-stage.measureText(txt).width/2-2) {
+    } else if (mousePos.x>canvas.width-stage.measureText(txt).width/2-2) {
       stage.textAlign = "right";
     } else {
       stage.textAlign = "center";
     }
-    stage.strokeText(txt, mousePos.x, -10+this.canvas.height-((this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].y+offsetY)/(this.y2-this.y1))*this.canvas.height);
-    stage.fillText(txt, mousePos.x, -10+this.canvas.height-((this.points[Math.round(mousePos.x/this.canvas.width*this.points.length)].y+offsetY)/(this.y2-this.y1))*this.canvas.height);
+    stage.strokeText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
+    stage.fillText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
   }.bind(this);
 
   var endMouseOver = function(event) {
-    this.canvas.removeEventListener("mousemove", moveMouse, false);
-    this.canvas.removeEventListener("mouseout", endMouseOver, false);
-    stage.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    canvas.removeEventListener("mousemove", moveMouse, false);
+    canvas.removeEventListener("mouseout", endMouseOver, false);
+    stage.clearRect(0, 0, canvas.width, canvas.height);
     stage.putImageData(img, 0, 0);
+  }.bind(this);
+
+  //Zooms based on scroll wheel
+  var scrollZoom = function(event) {
+    var delta = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
+    var distX = delta*(x2-x1)/25;
+    var distY = delta*(y2-y1)/25;
+    this.setRange(x1 + distX, x2 - distX, y1 + distY, y2 - distY);
   }.bind(this);
 
   //Returns the canvas element
   this.getCanvas = function() {
-    return this.canvas;
+    return canvas;
+  };
+
+  this.getX1 = function() {
+    return x1;
+  };
+
+  this.getX2 = function() {
+    return x2;
+  };
+
+  this.getY1 = function() {
+    return y1;
+  };
+
+  this.getY2= function() {
+    return y2;
   };
 
   //If canvas drawing is supported
-  if (this.canvas.getContext) {
+  if (canvas.getContext) {
 
     //Get the canvas context to draw onto
-    stage = this.canvas.getContext("2d");
+    stage = canvas.getContext("2d");
     stage.font = "12px sans-serif";
-    this.canvas.style.backgroundColor="#FFF";
+    canvas.style.backgroundColor="#FFF";
 
     //Make points
     this.update();
 
-    this.canvas.addEventListener("mousedown", startDrag, false);
-    this.canvas.addEventListener("mouseover", startMouseOver, false);
+    canvas.addEventListener("mousedown", startDrag, false);
+    canvas.addEventListener("mouseover", startMouseOver, false);
+    canvas.addEventListener("mousewheel", scrollZoom, false);
+    canvas.addEventListener("DOMMouseScroll", scrollZoom, false);
   } else {
-    console.log("Canvas not supported in this browser.");
-    this.canvas = document.createElement("div");
-    this.canvas.innerHTML="Canvas is not supported in this browser.";
+    XCalc.log("Canvas not supported in this browser.");
+    canvas = document.createElement("div");
+    canvas.innerHTML="Canvas is not supported in this browser.";
   }
 }
 
 //Module for input checking and parsing
 var XCalc = (function() {
   var worker={};
+
+  worker.errors=[];
+
+  //logs errors
+  worker.log = function(message) {
+    this.errors.push(message);
+  };
+
+  worker.clearErrors = function() {
+    this.errors = [];
+  };
+
+  worker.hasErrors = function() {
+    return this.errors.length;
+  };
+
+  //creates a list of errors to be displayed
+  worker.displayErrors = function() {
+    var errorDiv = document.createElement("div");
+    errorDiv.className="error";
+    errorDiv.innerHTML = "Errors:";
+    var errorList = document.createElement("ul");
+    for (var i=0; i<this.errors.length; i++) {
+      var e = document.createElement("li");
+      e.innerHTML = this.errors[i];
+      errorList.appendChild(e);
+    }
+    errorDiv.appendChild(errorList);
+    return errorDiv;
+  };
 
   //Checks to see if brackets are properly nested in a string
   worker.properBrackets = function(value) {
@@ -793,17 +838,24 @@ var XCalc = (function() {
     return openBrackets===0;
   };
 
-  //Creates a new Section for an expression
+  //Creates a new Segment for an expression
   worker.createExpression = function(value) {
     if (this.properBrackets(value)) {
       return new Segment(value);
     } else {
+      this.log("Improperly nested brackets.");
       return 0;
     }
   };
 
-  worker.graphExpression = function(value, width, height, rangeX, rangeY) {
-    return new Graph(value, width, height, rangeX, rangeY);
+  //Creates a new Graph for an expression
+  worker.graphExpression = function(value, width, height, x1, x2, y1, y2) {
+    if (this.properBrackets(value)) {
+      return new Graph(value, width, height, x1, x2, y1, y2);
+    } else {
+      this.log("Improperly nested brackets.");
+      return 0;
+    }
   };
 
   return worker;

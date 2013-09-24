@@ -6,6 +6,7 @@ body {
   font-family: sans-serif;
   padding:0;
   margin:0;
+  text-align:center;
 }
 #github {
   position:absolute;
@@ -21,6 +22,7 @@ body {
 }
 #top {
   padding:20px;
+  display:inline-block;
 }
 h1 {
   font-family: 'Open Sans', sans-serif;
@@ -44,17 +46,65 @@ input[type="submit"]:hover, input[type="button"]:hover, a.button:hover {
 }
 input[type="text"] {
   display:inline-block;
-  height:20px;
-  width: 290px;
-  padding: 10px;
   font-size: inherit;
+  padding: 10px;
   border: 0;
+}
+input[type="text"]:focus {
+  outline: 0;
+  background-color:#EEE;
+}
+#function {
+  margin-bottom:20px;
+}
+#function label {
+  display:inline-block;
+  height:40px;
+  line-height:40px;
+  margin-right:5px;
+}
+#function input[type="text"] {
+  width:83%;
+  display:inline-block;
+  height:20px;
+  float:right;
+}
+#range {
+  color: #9AB;
+}
+#range input[type="text"] {
+  width:30px;
+  height:15px;
+  text-align:center;
+  color: #9AB;
+  background-color:#2c3e50;
+}
+#range input[type="text"]::-webkit-input-placeholder{
+  color: #9AB;
+}
+#range input[type="text"]:-moz-placeholder{
+  color: #9AB;
+}
+#range input[type="text"]::-moz-placeholder {
+  color: #9AB;
+}
+#range input[type="text"]:-ms-input-placeholder {
+  color: #9AB;
+}
+#range input[type="text"]:focus {
+  background-color:#2e4052;
+}
+#graph {
+  margin:20px auto 0 auto;
+  width: 100%;
+  height:50px;
 }
 #result {
   margin-top:10px;
   padding:0 20px;
   overflow:hidden;
   background-color:#2c3e50;
+  text-align:center;
   max-height:0;
   -webkit-transition: all 0.3s ease-out;
   -moz-transition: all 0.3s ease-out;
@@ -62,7 +112,7 @@ input[type="text"] {
   -o-transition: all 0.3s ease-out;
   transition: all 0.3s ease-out;
 }
-.solved #result {
+.open #result {
   max-height:2000px;
   padding:20px;
   color:#FFF;
@@ -90,4 +140,7 @@ input[type="text"] {
   background-color:#6B1010;
   padding:10px;
   opacity:0.7;
+  display:inline-block;
+  width:500px;
+  text-align:left;
 }
