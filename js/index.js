@@ -2,8 +2,8 @@ function simplifyText(event) {
 
   //Grabs data from input elements
   var input = document.getElementById("input").value;
-  var x1 = parseFloat(document.getElementById("x1").value);
-  var x2 = parseFloat(document.getElementById("x2").value);
+  var x1 = (document.getElementById("x1").value=="")?undefined:parseFloat(document.getElementById("x1").value);
+  var x2 = (document.getElementById("x2").value=="")?undefined:parseFloat(document.getElementById("x2").value);
   var y1 = document.getElementById("y1").value?(document.getElementById("y1").value.trim()=="auto")?"auto":parseFloat(document.getElementById("y1").value):undefined;
   var y2 = document.getElementById("y2").value?(document.getElementById("y2").value.trim()=="auto")?"auto":parseFloat(document.getElementById("y2").value):undefined;
 

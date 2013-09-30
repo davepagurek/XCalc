@@ -305,6 +305,9 @@ function Segment(input) {
       var abs = findLast("abs", input);
       var multiplication = findLast("*", input);
       var multiplication2 = findMultiplicationBrackets(input); //Find brackets that are the same as multiplication
+      var xMultiplication = findLast("x", input);
+      var xMultiplication2 = findLast("X", input);
+      if (xMultiplication2>xMultiplication) xMultiplication = xMultiplication2;
       var functionMultiplication = -1;
       var operators="+-/*^";
       if (sin>multiplication && (sin===0 || operators.indexOf(input.substr(sin-1, 1))==-1)) functionMultiplication=sin;
@@ -314,6 +317,7 @@ function Segment(input) {
       if (acos>multiplication && (acos===0 || operators.indexOf(input.substr(acos-1, 1))==-1)) functionMultiplication=acos;
       if (atan>multiplication && (atan===0 || operators.indexOf(input.substr(atan-1, 1))==-1)) functionMultiplication=atan;
       if (abs>multiplication && (abs===0 || operators.indexOf(input.substr(abs-1, 1))==-1)) functionMultiplication=abs;
+      //if (xMultiplication>multiplication && (xMultiplication===0 || operators.indexOf(input.substr(xMultiplication-1, 1))==-1)) functionMultiplication=xMultiplication;
 
       //Push back each half of the equation into a section, in reverse order of operations
       if (addition != -1 && addition>subtraction) {
@@ -438,10 +442,10 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
   canvas.height=height || 400;
   var min;
   var max;
-  var x1 = startx1 || -10;
-  var x2 = startx2 || 10;
-  var y1 = starty1 || -10;
-  var y2 = starty2 || 10;
+  var x1 = (startx1===undefined)?-10:startx1;
+  var x2 = (startx2===undefined)?10:startx2;
+  var y1 = (starty1===undefined)?-10:starty1;
+  var y2 = (starty2===undefined)?10:starty2;
   var startMouse = new Point(0, 0);
   var mousePos = new Point(0, 0);
   var stage=0;
