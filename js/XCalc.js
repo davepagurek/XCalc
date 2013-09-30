@@ -309,7 +309,7 @@ function Segment(input) {
       var xMultiplication2 = findLast("X", input);
       if (xMultiplication2>xMultiplication) xMultiplication = xMultiplication2;
       var functionMultiplication = -1;
-      var operators="+-/*^";
+      var operators="+-/*^sincostanabs";
       if (sin>multiplication && (sin===0 || operators.indexOf(input.substr(sin-1, 1))==-1)) functionMultiplication=sin;
       if (cos>multiplication && (cos===0 || operators.indexOf(input.substr(cos-1, 1))==-1)) functionMultiplication=cos;
       if (tan>multiplication && (tan===0 || operators.indexOf(input.substr(tan-1, 1))==-1)) functionMultiplication=tan;
@@ -317,7 +317,7 @@ function Segment(input) {
       if (acos>multiplication && (acos===0 || operators.indexOf(input.substr(acos-1, 1))==-1)) functionMultiplication=acos;
       if (atan>multiplication && (atan===0 || operators.indexOf(input.substr(atan-1, 1))==-1)) functionMultiplication=atan;
       if (abs>multiplication && (abs===0 || operators.indexOf(input.substr(abs-1, 1))==-1)) functionMultiplication=abs;
-      //if (xMultiplication>multiplication && (xMultiplication===0 || operators.indexOf(input.substr(xMultiplication-1, 1))==-1)) functionMultiplication=xMultiplication;
+      if (xMultiplication>multiplication && (xMultiplication===0 || operators.indexOf(input.substr(xMultiplication-1, 1))==-1)) functionMultiplication=xMultiplication;
 
       //Push back each half of the equation into a section, in reverse order of operations
       if (addition != -1 && addition>subtraction) {
