@@ -306,13 +306,14 @@ function Segment(input) {
       var multiplication = findLast("*", input);
       var multiplication2 = findMultiplicationBrackets(input); //Find brackets that are the same as multiplication
       var functionMultiplication = -1;
-      if (sin>multiplication) functionMultiplication=sin;
-      if (cos>multiplication) functionMultiplication=cos;
-      if (tan>multiplication) functionMultiplication=tan;
-      if (asin>multiplication) functionMultiplication=asin;
-      if (acos>multiplication) functionMultiplication=acos;
-      if (atan>multiplication) functionMultiplication=atan;
-      if (abs>multiplication) functionMultiplication=abs;
+      var operators="+-/*^";
+      if (sin>multiplication && (sin===0 || operators.indexOf(input.substr(sin-1, 1))==-1)) functionMultiplication=sin;
+      if (cos>multiplication && (cos===0 || operators.indexOf(input.substr(cos-1, 1))==-1)) functionMultiplication=cos;
+      if (tan>multiplication && (tan===0 || operators.indexOf(input.substr(tan-1, 1))==-1)) functionMultiplication=tan;
+      if (asin>multiplication && (asin===0 || operators.indexOf(input.substr(asin-1, 1))==-1)) functionMultiplication=asin;
+      if (acos>multiplication && (acos===0 || operators.indexOf(input.substr(acos-1, 1))==-1)) functionMultiplication=acos;
+      if (atan>multiplication && (atan===0 || operators.indexOf(input.substr(atan-1, 1))==-1)) functionMultiplication=atan;
+      if (abs>multiplication && (abs===0 || operators.indexOf(input.substr(abs-1, 1))==-1)) functionMultiplication=abs;
 
       //Push back each half of the equation into a section, in reverse order of operations
       if (addition != -1 && addition>subtraction) {
