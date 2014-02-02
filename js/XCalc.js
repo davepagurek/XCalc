@@ -51,6 +51,10 @@ function MathFunction(input) {
       return new Segment(Math.atan(v));
     } else if (this.f=="abs") {
       return new Segment(Math.abs(v));
+    } else if (this.f=="log") {
+      return new Segment(Math.log(v)/Math.log(10));
+    } else if (this.f=="ln") {
+      return new Segment(Math.log(v));
     }
   };
 }
@@ -202,7 +206,7 @@ function Segment(input) {
     var inBracketsClosed=true;
     var indexOpen=-1;
     var indexClosed=-1;
-    var operators="+-/*^sincostanabs";
+    var operators="+-/*^sincostanabsloglnsqrt";
     
     indexOpen=value.lastIndexOf("(");
     indexClosed=value.lastIndexOf(")");
@@ -303,13 +307,16 @@ function Segment(input) {
       var acos = findLast("acos", input);
       var atan = findLast("atan", input);
       var abs = findLast("abs", input);
+      var log = findLast("log", input);
+      var ln = findLast("ln", input);
+      var sqrt = findLast("sqrt", input);
       var multiplication = findLast("*", input);
       var multiplication2 = findMultiplicationBrackets(input); //Find brackets that are the same as multiplication
       var xMultiplication = findLast("x", input);
       var xMultiplication2 = findLast("X", input);
       if (xMultiplication2>xMultiplication) xMultiplication = xMultiplication2;
       var functionMultiplication = -1;
-      var operators="+-/*^sincostanabs";
+      var operators="+-/*^sincostanabsloglnsqrt";
       if (sin>multiplication && (sin===0 || operators.indexOf(input.substr(sin-1, 1))==-1)) functionMultiplication=sin;
       if (cos>multiplication && (cos===0 || operators.indexOf(input.substr(cos-1, 1))==-1)) functionMultiplication=cos;
       if (tan>multiplication && (tan===0 || operators.indexOf(input.substr(tan-1, 1))==-1)) functionMultiplication=tan;
@@ -317,6 +324,9 @@ function Segment(input) {
       if (acos>multiplication && (acos===0 || operators.indexOf(input.substr(acos-1, 1))==-1)) functionMultiplication=acos;
       if (atan>multiplication && (atan===0 || operators.indexOf(input.substr(atan-1, 1))==-1)) functionMultiplication=atan;
       if (abs>multiplication && (abs===0 || operators.indexOf(input.substr(abs-1, 1))==-1)) functionMultiplication=abs;
+      if (log>multiplication && (log===0 || operators.indexOf(input.substr(log-1, 1))==-1)) functionMultiplication=log;
+      if (ln>multiplication && (ln===0 || operators.indexOf(input.substr(ln-1, 1))==-1)) functionMultiplication=ln;
+      if (sqrt>multiplication && (sqrt===0 || operators.indexOf(input.substr(sqrt-1, 1))==-1)) functionMultiplication=sqrt;
       if (xMultiplication>multiplication && (xMultiplication===0 || operators.indexOf(input.substr(xMultiplication-1, 1))==-1)) functionMultiplication=xMultiplication;
 
       //Push back each half of the equation into a section, in reverse order of operations
@@ -352,34 +362,46 @@ function Segment(input) {
         this.sections.push(new Segment(input.substring(0, exponent)));
         this.sections.push(new Segment(input.substring(exponent+1)));
         this.operator = new Operator("^");
-      } else if (sin != -1 && Math.max(sin, cos, tan, asin, acos, atan, abs)==sin) {
+      } else if (sin != -1 && Math.max(sin, cos, tan, asin, acos, atan, abs, log, ln, sqrt)==sin) {
         this.sections.push(new Segment(input.substring(sin+3)));
         this.mathFunction = new MathFunction("sin");
         this.type = "function";
-      } else if (cos != -1 && Math.max(cos, tan, asin, acos, atan, abs)==cos) {
+      } else if (cos != -1 && Math.max(cos, tan, asin, acos, atan, abs, log, ln, sqrt)==cos) {
         this.sections.push(new Segment(input.substring(cos+3)));
         this.mathFunction = new MathFunction("cos");
         this.type = "function";
-      } else if (tan != -1 && Math.max(tan, asin, acos, atan, abs)==tan) {
+      } else if (tan != -1 && Math.max(tan, asin, acos, atan, abs, log, ln, sqrt)==tan) {
         this.sections.push(new Segment(input.substring(tan+3)));
         this.mathFunction = new MathFunction("tan");
         this.type = "function";
-      } else if (asin != -1 && Math.max(asin, acos, atan, abs)==asin) {
+      } else if (asin != -1 && Math.max(asin, acos, atan, abs, log, ln, sqrt)==asin) {
         this.sections.push(new Segment(input.substring(asin+4)));
         this.mathFunction = new MathFunction("asin");
         this.type = "function";
-      } else if (acos != -1 && Math.max(acos, atan, abs)==acos) {
+      } else if (acos != -1 && Math.max(acos, atan, abs, log, ln, sqrt)==acos) {
         this.sections.push(new Segment(input.substring(acos+4)));
         this.mathFunction = new MathFunction("acos");
         this.type = "function";
-      } else if (atan != -1 && atan>abs) {
+      } else if (atan != -1 && Math.max(atan, abs, log, ln, sqrt)==acos) {
         this.sections.push(new Segment(input.substring(atan+4)));
         this.mathFunction = new MathFunction("atan");
         this.type = "function";
-      } else if (abs != -1) {
+      } else if (abs != -1 && Math.max(abs, log, ln, sqrt)==abs) {
         this.sections.push(new Segment(input.substring(abs+3)));
         this.mathFunction = new MathFunction("abs");
         this.type = "function";
+      } else if (log != -1 && Math.max(log, ln, sqrt)==log) {
+        this.sections.push(new Segment(input.substring(log+3)));
+        this.mathFunction = new MathFunction("log");
+        this.type = "function";
+      } else if (ln != -1 && Math.max(ln, sqrt)==ln) {
+        this.sections.push(new Segment(input.substring(ln+2)));
+        this.mathFunction = new MathFunction("ln");
+        this.type = "function";
+      } else if (sqrt != -1) {
+        this.sections.push(new Segment(input.substring(sqrt+4)));
+        this.sections.push(new Segment("0.5"));
+        this.operator = new Operator("^");
       } else if (bracket1 != -1) {
         var openBrackets=1;
         for (var i=bracket1+1; i<input.length&&openBrackets>0; i++) {

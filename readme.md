@@ -111,6 +111,9 @@ As of version 1.9:
 			<li>acos</li>
 			<li>atan</li>
 			<li>abs</li>
+			<li>log</li>
+			<li>ln</li>
+			<li>sqrt</li>
 		</ul>
 	</li>
 	<li>Single variable evaluation (include "x" in the expression string)</li>
