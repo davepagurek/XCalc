@@ -515,7 +515,12 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
     points = [];
     for (var i=x1; i<=x2; i+=accuracy) {
       points.push(new Point(i, this.expression.result(i)));
+      if (points.length>1 && Math.abs(points[points.length-1].y-points[points.length-2].y)>10000) {
+        points[points.length-1].y=undefined;
+      }
     }
+    max=undefined;
+    min=undefined;
 
     if (autoRange) {
       if (this.getMax()-this.getMin()>100000) {
@@ -632,12 +637,20 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
       stage.strokeStyle="#2980b9";
       stage.lineWidth=1;
       stage.beginPath();
-      stage.moveTo(0, canvas.height-((points[0].y+offsetY)/(y2-y1))*canvas.height);
-      for (var i=1; i<points.length; i++) {
-        if (Math.abs((canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height)-(canvas.height-((points[i-1].y+offsetY)/(y2-y1))*canvas.height))<=canvas.height) {
+
+      //Find the first point that exists
+      var i=0;
+      while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
+      stage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+      for (i++; i<points.length; i++) {
+        if (Math.abs((canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height)-(canvas.height-((points[i-1].y+offsetY)/(y2-y1))*canvas.height))<=canvas.height && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
           stage.lineTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
         }
-        stage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+        if (points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
+          stage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+        } else {
+          stage.moveTo((i/points.length)*canvas.width, canvas.height-((0+offsetY)/(y2-y1))*canvas.height);
+        }
       }
       stage.closePath();
       stage.stroke();
@@ -745,27 +758,31 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
     if (mousePos.y<0) mousePos.y=0;
     var offsetY = -y1;
 
-    //Draw the coordinate
-    stage.fillStyle="#2980b9";
-    stage.beginPath();
-    stage.arc(mousePos.x, canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height, 4, 0, 2*Math.PI);
-    stage.closePath();
-    stage.fill();
-    stage.fillStyle="#000";
-    stage.strokeStyle="#FFF";
-    stage.lineWidth=4;
-    stage.textBaseline="alphabetic";
-    var txt="(" + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].x*100)/100).toFixed(2) + ", " + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].y*100)/100).toFixed(2) + ")";
+    //Check if the function exists at that x value
+    if (points[Math.round(mousePos.x/canvas.width*points.length)].y) {
 
-    if (mousePos.x<stage.measureText(txt).width/2+2) {
-      stage.textAlign = "left";
-    } else if (mousePos.x>canvas.width-stage.measureText(txt).width/2-2) {
-      stage.textAlign = "right";
-    } else {
-      stage.textAlign = "center";
+      //Draw the coordinate
+      stage.fillStyle="#2980b9";
+      stage.beginPath();
+      stage.arc(mousePos.x, canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height, 4, 0, 2*Math.PI);
+      stage.closePath();
+      stage.fill();
+      stage.fillStyle="#000";
+      stage.strokeStyle="#FFF";
+      stage.lineWidth=4;
+      stage.textBaseline="alphabetic";
+      var txt="(" + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].x*100)/100).toFixed(2) + ", " + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].y*100)/100).toFixed(2) + ")";
+
+      if (mousePos.x<stage.measureText(txt).width/2+2) {
+        stage.textAlign = "left";
+      } else if (mousePos.x>canvas.width-stage.measureText(txt).width/2-2) {
+        stage.textAlign = "right";
+      } else {
+        stage.textAlign = "center";
+      }
+      stage.strokeText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
+      stage.fillText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
     }
-    stage.strokeText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
-    stage.fillText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
   }.bind(this);
 
   var endMouseOver = function(event) {
