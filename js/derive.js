@@ -15,8 +15,7 @@ function simplifyText(event) {
 
     //If there are no errors, show the graph
     if (!XCalc.hasErrors()) {
-      console.log(equation.simplify());
-      document.getElementById("result").innerHTML = equation.simplify().formula();
+      document.getElementById("result").innerHTML = equation.simplify().derivative().simplify().formula();
       document.getElementById("wrapper").className="open";
 
     //Otherwise, show the errors, then clear the error list

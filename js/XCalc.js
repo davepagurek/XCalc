@@ -273,7 +273,7 @@ function Segment(input) {
         return this.sections[0].containsX() || this.sections[1].containsX();
       }
     }
-  }
+  };
 
   //Recursively solve children
   this.solve = function(x) {
@@ -307,6 +307,33 @@ function Segment(input) {
       for (var i=0; i<expression.sections.length; i++) {
         expression.sections[i] = expression.sections[i].simplify();
       }
+      if (expression.type=="section") {
+        if (expression.operator.operator == "+" || expression.operator.operator == "-") {
+          if (expression.sections[0].type=="value" && expression.sections[0].coefficient==0) {
+            expression=expression.sections[1];
+          } else if (expression.sections[1].type=="value" && expression.sections[1].coefficient==0) {
+            expression=expression.sections[0];
+          }
+        } else if (expression.operator.operator == "*") {
+          if (expression.sections[0].type=="value" && expression.sections[0].coefficient==1) {
+            expression = expression.sections[1];
+          } else if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
+            expression = expression.sections[0];
+          }
+        } else if (expression.operator.operator == "/") {
+          if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
+            expression = expression.sections[0];
+          }
+        } else if (expression.operator.operator == "^") {
+          if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
+            expression = expression.sections[0];
+          } else if (expression.sections[1].type=="value" && expression.sections[1].coefficient==0) {
+            expression = new Segment(0);
+          } else if (expression.sections[0].type=="value" && expression.sections[0].coefficient==1) {
+            expression = new Segment(1);
+          }
+        }
+      }
 
     //If it can be simplified to a value, simplify
     } else if (expression.type!="variable") {
@@ -315,7 +342,265 @@ function Segment(input) {
     }
 
     return expression;
-  }
+  };
+
+  this.derivative = function() {
+    var expression = this;
+    var deriv = new Segment(0);
+    var s1, s2, s3, s4;
+
+    if (expression.type=="variable") {
+      deriv.coefficient = 1;
+    } else if (expression.type == "value" || !expression.containsX()) {
+      deriv.coefficient = 0;
+    } else if (expression.type=="section" && expression.operator.operator!="^") {
+
+      //+/- rules
+      if (expression.operator.operator == "+") {
+        deriv.type = "section";
+        deriv.sections.push(expression.sections[0].derivative());
+        deriv.sections.push(expression.sections[1].derivative());
+        deriv.operator = new Operator("+");
+      } else if (expression.operator.operator == "-") {
+        deriv.type = "section";
+        deriv.sections.push(expression.sections[0].derivative());
+        deriv.sections.push(expression.sections[1].derivative());
+        deriv.operator = new Operator("-");
+
+      //Product rule
+      } else if (expression.operator.operator == "*") {
+        s1 = new Segment(0);
+        s1.type = "section";
+        s1.sections.push(expression.sections[0].derivative());
+        s1.sections.push(expression.sections[1]);
+        s1.operator = new Operator("*");
+
+        s2 = new Segment(0);
+        s2.type = "section";
+        s2.sections.push(expression.sections[0]);
+        s2.sections.push(expression.sections[1].derivative());
+        s2.operator = new Operator("*");
+
+        deriv.type = "section";
+        deriv.sections.push(s1);
+        deriv.sections.push(s2);
+        deriv.operator = new Operator("+");
+
+      //Quotient rule
+      } else if (expression.operator.operator == "/") {
+        s1 = new Segment(0);
+        s1.type = "section";
+        s1.sections.push(expression.sections[1].derivative());
+        s1.sections.push(expression.sections[0]);
+        s1.operator = new Operator("*");
+
+        s2 = new Segment(0);
+        s2.type = "section";
+        s2.sections.push(expression.sections[0].derivative());
+        s2.sections.push(expression.sections[1]);
+        s2.operator = new Operator("*");
+
+        var num = new Segment(0);
+        num.type = "section";
+        num.sections.push(s1);
+        num.sections.push(s2);
+        num.operator = new Operator("-");
+
+        var denom = new Segment(0);
+        denom.type = "section";
+        denom.sections.push(expression.sections[1]);
+        denom.sections.push(new Segment(2));
+        denom.operator = new Operator("^");
+
+        deriv.type = "section";
+        deriv.sections.push(num);
+        deriv.sections.push(denom);
+        deriv.operator = new Operator("/");
+      }
+
+    //functions
+    } else {
+      var uprime;
+
+      s1 = new Segment(0);
+
+      s1.type = "section";
+
+      //Exponents
+      if (expression.type == "section" && expression.operator.operator=="^") {
+
+        //Power rule
+        if (expression.sections[1].containsX()) {
+          if (expression.segments[0].containsX()) {
+            XCalc.log("X found in both bsae and exponent.");
+          }
+
+          s2 = new Segment(0);
+          s2.type = "function";
+          s2.sections.push(expression.sections[0]);
+          s2.mathFunction = new MathFunction("ln");
+
+          s1.sections.push(expression);
+          s1.sections.push(s2);
+          s1.operator = new Operator("*");
+
+        //Polynomial rule
+        } else {
+          var exp = new Segment(0);
+          exp.type = "section";
+          exp.sections.push(expression.sections[1]);
+          exp.sections.push(new Segment(1));
+          exp.operator = new Operator("-");
+
+          s2 = new Segment(0);
+          s2.type = "section";
+          s2.sections.push(expression.sections[0]);
+          s2.sections.push(exp);
+          s2.operator = new Operator("^");
+
+          s1.sections.push(expression.sections[1]);
+          s1.sections.push(s2);
+          s1.operator = new Operator("*");
+
+          uprime = expression.sections[0].derivative();
+        }
+      } else {
+        uprime = expression.sections[0].derivative();
+
+        if (expression.mathFunction.f=="ln") {
+          s1.sections.push(new Segment(1));
+          s1.sections.push(expression);
+          s1.operator = new Operator("/");
+
+        } else if (expression.mathFunction.f=="log") {
+          s2 = new Segment(0);
+          s2.mathFunction = new MathFunction("ln");
+          s2.type="function";
+          s2.sections.push(new Segment(10));
+
+          s3 = new Segment(0);
+          s3.type="section";
+          s3.sections.push(expression);
+          s3.sections.push(s2);
+          s3.operator = new Operator("*");
+
+          s1.sections.push(new Segment(1));
+          s1.sections.push(s3);
+          s1.operator = new Operator("/");
+
+        } else if (expression.mathFunction.f=="sin") {
+          s1.mathFunction = new MathFunction("cos");
+          s1.type="function";
+          s1.sections.push(expression.sections[0]);
+
+        } else if (expression.mathFunction.f=="cos") {
+          s2 = new Segment(0);
+          s2.mathFunction = new MathFunction("sin");
+          s2.type="function";
+          s2.sections.push(expression.sections[0]);
+
+          s1.sections.push(new Segment(0));
+          s1.sections.push(s2);
+          s1.operator = new Operator("-");
+
+        } else if (expression.mathFunction.f=="tan") {
+          s2 = new Segment(0);
+          s2.mathFunction = new MathFunction("cos");
+          s2.type="function";
+          s2.sections.push(expression.sections[0]);
+
+          s3 = new Segment(0);
+          s3.type="section";
+          s3.sections.push(s2);
+          s3.sections.push(new Segment(2));
+          s3.operator = new Operator("^");
+
+          s1.sections.push(new Segment(1));
+          s1.sections.push(s2);
+          s1.operator = new Operator("/");
+
+        } else if (expression.mathFunction.f=="asin") {
+          s2 = new Segment(0);
+          s2.type="section";
+          s2.sections.push(expression.sections[0]);
+          s2.sections.push(new Segment(2));
+          s2.operator=new Operator("^");
+
+          s3 = new Segment(0);
+          s3.type="section";
+          s3.sections.push(new Segment(1));
+          s3.sections.push(s2);
+          s3.operator = new Operator("-");
+
+          s4 = new Segment(0);
+          s4.type="section";
+          s4.sections.push(s3);
+          s4.sections.push(0.5);
+          s4.operator = new Operator("^");
+
+          s1.sections.push(new Segment(1));
+          s1.sections.push(s4);
+          s1.operator = new Operator("/");
+        
+        } else if (expression.mathFunction.f=="acos") {
+          s2 = new Segment(0);
+          s2.type="section";
+          s2.sections.push(expression.sections[0]);
+          s2.sections.push(new Segment(2));
+          s2.operator=new Operator("^");
+
+          s3 = new Segment(0);
+          s3.type="section";
+          s3.sections.push(new Segment(1));
+          s3.sections.push(s2);
+          s3.operator = new Operator("-");
+
+          s4 = new Segment(0);
+          s4.type="section";
+          s4.sections.push(new Segment(0));
+          s4.sections.push(new Segment(1));
+          s4.operator = new Operator("-");
+
+          var s5 = new Segment(0);
+          s5.type="section";
+          s5.sections.push(s3);
+          s5.sections.push(0.5);
+          s5.operator = new Operator("^");
+
+          s1.sections.push(s4);
+          s1.sections.push(s3);
+          s1.operator = new Operator("/");
+        
+        } else if (expression.mathFunction.f=="atan") {
+          s2 = new Segment(0);
+          s2.type="section";
+          s2.sections.push(expression.sections[0]);
+          s2.sections.push(new Segment(2));
+          s2.operator=new Operator("^");
+
+          s3 = new Segment(0);
+          s3.type="section";
+          s3.sections.push(s2);
+          s3.sections.push(new Segment(1));
+          s3.operator = new Operator("+");
+
+          s1.sections.push(new Segment(1));
+          s1.sections.push(s3);
+          s1.operator = new Operator("/");
+        
+        }
+
+      }
+
+      //Chain rule
+      deriv.type = "section";
+      deriv.sections.push(s1);
+      deriv.sections.push(uprime);
+      deriv.operator = new Operator("*");
+    }
+
+    return deriv;
+  };
 
   //Returns a string with the formula of the function
   this.formula = function() {
@@ -326,13 +611,23 @@ function Segment(input) {
     } else if (this.type=="variable") {
       str += "x";
     } else if (this.type=="function") {
-      str += this.mathFunction.f + "(" + this.sections[0].formula + ")";
+      str += this.mathFunction.f + "(" + this.sections[0].formula() + ")";
     } else if (this.type=="section") {
-      str+= this.sections[0].formula() + this.operator.operator + this.sections[1].formula();
+      if (this.sections[0].type=="section") {
+        str+= "(" + this.sections[0].formula() + ")";
+      } else {
+        str+= this.sections[0].formula();
+      }
+      str += this.operator.operator;
+      if (this.sections[1].type=="section") {
+        str+= "(" + this.sections[1].formula() + ")";
+      } else {
+        str+= this.sections[1].formula();
+      }
     }
 
     return str;
-  }
+  };
 
   //constructor: parse the string
   if (input!==undefined) {
