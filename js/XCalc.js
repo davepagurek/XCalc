@@ -261,6 +261,20 @@ function Segment(input) {
     }
   };
 
+  this.containsX = function() {
+    if (this.type=="variable") {
+      return true;
+    } else if (this.type=="value") {
+      return false;
+    } else {
+      if (this.sections.length==1) {
+        return this.sections[0].containsX();
+      } else if (this.sections.length==2) {
+        return this.sections[0].containsX() || this.sections[1].containsX();
+      }
+    }
+  }
+
   //Recursively solve children
   this.solve = function(x) {
     if (!x) x=0;
@@ -283,6 +297,42 @@ function Segment(input) {
   this.result = function(x) {
     return this.solve(x).coefficient;
   };
+
+  this.simplify = function() {
+    var expression = this;
+
+    //If the segment is a variable, leave it as is.
+    //If it contains a variable in its subsections, simplify subsections
+    if (expression.containsX() && expression.type!="variable") {
+      for (var i=0; i<expression.sections.length; i++) {
+        expression.sections[i] = expression.sections[i].simplify();
+      }
+
+    //If it can be simplified to a value, simplify
+    } else if (expression.type!="variable") {
+      expression.coefficient = expression.result();
+      expression.type="value";
+    }
+
+    return expression;
+  }
+
+  //Returns a string with the formula of the function
+  this.formula = function() {
+    var str = "";
+
+    if (this.type=="value") {
+      str += this.coefficient;
+    } else if (this.type=="variable") {
+      str += "x";
+    } else if (this.type=="function") {
+      str += this.mathFunction.f + "(" + this.sections[0].formula + ")";
+    } else if (this.type=="section") {
+      str+= this.sections[0].formula() + this.operator.operator + this.sections[1].formula();
+    }
+
+    return str;
+  }
 
   //constructor: parse the string
   if (input!==undefined) {
