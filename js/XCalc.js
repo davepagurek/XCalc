@@ -469,7 +469,7 @@ function Segment(input) {
 
         if (expression.mathFunction.f=="ln") {
           s1.sections.push(new Segment(1));
-          s1.sections.push(expression);
+          s1.sections.push(expression.sections[0]);
           s1.operator = new Operator("/");
 
         } else if (expression.mathFunction.f=="log") {
@@ -480,7 +480,7 @@ function Segment(input) {
 
           s3 = new Segment(0);
           s3.type="section";
-          s3.sections.push(expression);
+          s3.sections.push(expression.sections[0]);
           s3.sections.push(s2);
           s3.operator = new Operator("*");
 
