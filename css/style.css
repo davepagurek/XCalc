@@ -126,15 +126,6 @@ input[type="text"]:focus {
   clear:both;
   text-align:center;
 }
-.group {
-  padding:5px;
-  margin:5px;
-  border:1px solid #FFF;
-  display:inline-block;
-}
-.group.operator {
-  border:0;
-}
 .final {
   color:#FFF;
   font-size:60px;
@@ -148,4 +139,30 @@ input[type="text"]:focus {
   display:inline-block;
   width:500px;
   text-align:left;
+}
+
+/* Pretty formula styles */
+.group {
+  font-family: 'Open Sans', sans-serif;
+  display:inline-block;
+  vertical-align:baseline;
+  text-align:center;
+  margin:1px 1px 0 0;
+  padding:0;
+}
+.division {
+  vertical-align: middle;
+}
+.operator {
+  padding:5px;
+}
+.exponent {
+  font-size: 0.7em;
+  vertical-align:super;
+}
+.denom {
+  clear:both;
+  display:block;
+  border-top:1px solid #FFF;
+  padding:0 20px;
 }

@@ -319,6 +319,8 @@ function Segment(input) {
             expression = expression.sections[1];
           } else if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
             expression = expression.sections[0];
+          } else if ((expression.sections[0].type=="value" && expression.sections[0].coefficient==0) || (expression.sections[1].type=="value" && expression.sections[1].coefficient==0)) {
+            expression = new Segment(0);
           }
         } else if (expression.operator.operator == "/") {
           if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
@@ -431,7 +433,7 @@ function Segment(input) {
 
         //Power rule
         if (expression.sections[1].containsX()) {
-          if (expression.segments[0].containsX()) {
+          if (expression.sections[0].containsX()) {
             XCalc.log("X found in both bsae and exponent.");
           }
 
@@ -443,6 +445,8 @@ function Segment(input) {
           s1.sections.push(expression);
           s1.sections.push(s2);
           s1.operator = new Operator("*");
+
+          uprime = expression.sections[1].derivative();
 
         //Polynomial rule
         } else {
@@ -516,7 +520,7 @@ function Segment(input) {
           s3.operator = new Operator("^");
 
           s1.sections.push(new Segment(1));
-          s1.sections.push(s2);
+          s1.sections.push(s3);
           s1.operator = new Operator("/");
 
         } else if (expression.mathFunction.f=="asin") {
@@ -535,7 +539,7 @@ function Segment(input) {
           s4 = new Segment(0);
           s4.type="section";
           s4.sections.push(s3);
-          s4.sections.push(0.5);
+          s4.sections.push(new Segment(0.5));
           s4.operator = new Operator("^");
 
           s1.sections.push(new Segment(1));
@@ -564,11 +568,11 @@ function Segment(input) {
           var s5 = new Segment(0);
           s5.type="section";
           s5.sections.push(s3);
-          s5.sections.push(0.5);
+          s5.sections.push(new Segment(0.5));
           s5.operator = new Operator("^");
 
           s1.sections.push(s4);
-          s1.sections.push(s3);
+          s1.sections.push(s5);
           s1.operator = new Operator("/");
         
         } else if (expression.mathFunction.f=="atan") {
@@ -626,6 +630,43 @@ function Segment(input) {
       }
     }
 
+    return str;
+  };
+
+  //Returns formula in divs for CSS
+  this.prettyFormula = function() {
+    var str="<div class='group " + this.type + ((this.type=="section" && this.operator.operator=="/")?" division":"") + "'>";
+
+    if (this.type=="value") {
+      str += this.coefficient;
+    } else if (this.type=="variable") {
+      str += "x";
+    } else if (this.type=="function") {
+      str += this.mathFunction.f + "(" + this.sections[0].prettyFormula() + ")";
+    } else if (this.type=="section") {
+      if (this.sections[0].type=="section" && this.sections[0].operator.operator!="/") {
+        str+= "(" + this.sections[0].prettyFormula() + ")";
+      } else {
+        str+= this.sections[0].prettyFormula();
+      }
+      if (this.operator.operator=="*") {
+        str += "<span class='operator'>&times</span>";
+      } else if (this.operator.operator!="^" && this.operator.operator!="/") {
+        str += "<span class='operator'>" + this.operator.operator + "</span>";
+      }
+      if (this.operator.operator=="^") {
+        str += "<div class='group exponent'>" + this.sections[1].prettyFormula() + "</div>";
+      } else if (this.operator.operator == "/") {
+        str += "<div class='group denom'>" + this.sections[1].prettyFormula() + "</div>";
+      } else {
+        if (this.sections[1].type=="section" && this.sections[0].operator.operator!="/") {
+          str+= "(" + this.sections[1].prettyFormula() + ")";
+        } else {
+          str+= this.sections[1].prettyFormula();
+        }
+      }
+    }
+    str+="</div>";
     return str;
   };
 
@@ -727,7 +768,7 @@ function Segment(input) {
         this.sections.push(new Segment(input.substring(acos+4)));
         this.mathFunction = new MathFunction("acos");
         this.type = "function";
-      } else if (atan != -1 && Math.max(atan, abs, log, ln, sqrt)==acos) {
+      } else if (atan != -1 && Math.max(atan, abs, log, ln, sqrt)==atan) {
         this.sections.push(new Segment(input.substring(atan+4)));
         this.mathFunction = new MathFunction("atan");
         this.type = "function";
