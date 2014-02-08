@@ -1076,7 +1076,7 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
       while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
       stage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
       for (i++; i<points.length; i++) {
-        if (points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
+        if (Math.abs((canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height)-(canvas.height-((points[i-1].y+offsetY)/(y2-y1))*canvas.height))<=canvas.height && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
           stage.lineTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
         }
         if (points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
