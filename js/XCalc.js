@@ -275,6 +275,26 @@ function Segment(input) {
     }
   };
 
+  this.equals = function(expression) {
+    if (this.type != expression.type) {
+      return false;
+    } else {
+      if (this.type=="function") {
+        return (this.mathFunction.f==expression.mathFunction.f && this.sections[0].equals(expression.sections[0]));
+      } else if (this.type=="variable") {
+        return (this.variable==expression.variable && this.coefficient==expression.coefficient);
+      } else if (this.type=="value") {
+        return this.coefficient==expression.coefficient;
+      } else if (this.type=="section") {
+        if (this.operator.operator=="*" || this.operator.operator=="+") {
+          return (this.operator.operator==expression.operator.operator && ((this.sections[0].equals(expression.sections[0]) && this.sections[1].equals(expression.sections[1])) || (this.sections[0].equals(expression.sections[1]) && this.sections[1].equals(expression.sections[0]))));
+        } else {
+          return (this.operator.operator==expression.operator.operator && this.sections[0].equals(expression.sections[0]) && this.sections[1].equals(expression.sections[1]));
+        }
+      }
+    }
+  }
+
   //Recursively solve children
   this.solve = function(x) {
     if (!x) x=0;
@@ -325,6 +345,8 @@ function Segment(input) {
         } else if (expression.operator.operator == "/") {
           if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
             expression = expression.sections[0];
+          } else if (expression.sections[0].equals(expression.sections[1])) {
+            expression = new Segment(1);
           }
         } else if (expression.operator.operator == "^") {
           if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
@@ -431,12 +453,25 @@ function Segment(input) {
       //Exponents
       if (expression.type == "section" && expression.operator.operator=="^") {
 
-        //Power rule
-        if (expression.sections[1].containsX()) {
-          if (expression.sections[0].containsX()) {
-            XCalc.log("X found in both bsae and exponent.");
-          }
+        //Implicitly derive ln(y)
+        if (expression.sections[1].containsX() && expression.sections[0].containsX()) {
+          s1 = expression;
 
+          s2 = new Segment(0);
+          s2.type = "function";
+          s2.sections.push(expression.sections[0]);
+          s2.mathFunction = new MathFunction("ln");
+
+          s3 = new Segment(0);
+          s3.type="section";
+          s3.sections.push(expression.sections[1]);
+          s3.sections.push(s2);
+          s3.operator = new Operator("*");
+
+          uprime = s3.derivative();
+
+        //Power rule
+        } else if (expression.sections[1].containsX()) {
           s2 = new Segment(0);
           s2.type = "function";
           s2.sections.push(expression.sections[0]);
@@ -632,6 +667,10 @@ function Segment(input) {
 
     return str;
   };
+
+  this.derive = function() {
+    return this.simplify().derivative().simplify();
+  }
 
   //Returns formula in divs for CSS
   this.prettyFormula = function() {
@@ -833,8 +872,8 @@ function Segment(input) {
 
 //One point on a graph
 function Point(x, y) {
-  this.x = x || 0;
-  this.y = y || 0;
+  this.x = x;
+  this.y = y;
 }
 
 
@@ -843,7 +882,11 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
   var autoRange=(starty1===undefined || starty1=="auto");
 
   //Properties
-  this.expression = new Segment(value);
+  if (typeof(value)=="string") {
+    this.expression = new Segment(value);
+  } else {
+    this.expression = value;
+  }
   var points = [];
   var canvas = document.createElement("canvas");
   canvas.width=width || 400;
@@ -863,8 +906,10 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
   this.getMin = function() {
     if (min===undefined) {
       if (points.length>0) {
-        var _min = points[0].y;
-        for (var i=1; i<points.length; i++) {
+        var i=0;
+        while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
+        var _min = points[i].y;
+        for (i++; i<points.length; i++) {
           if (points[i].y<_min) _min = points[i].y;
         }
         min=_min;
@@ -881,8 +926,10 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
   this.getMax = function() {
     if (max===undefined) {
       if (points.length>0) {
-        var _max = points[0].y;
-        for (var i=1; i<points.length; i++) {
+        var i=0;
+        while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
+        var _max = points[i].y;
+        for (i++; i<points.length; i++) {
           if (points[i].y>_max) _max = points[i].y;
         }
         max=_max;
@@ -901,7 +948,7 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
     points = [];
     for (var i=x1; i<=x2; i+=accuracy) {
       points.push(new Point(i, this.expression.result(i)));
-      if (points.length>1 && Math.abs(points[points.length-1].y-points[points.length-2].y)>10000) {
+      if ((points[points.length-1].y!==0 && !points[points.length-1].y) || Math.abs(points[points.length-1].y)>10000) {
         points[points.length-1].y=undefined;
       }
     }
@@ -1029,7 +1076,7 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
       while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
       stage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
       for (i++; i<points.length; i++) {
-        if (Math.abs((canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height)-(canvas.height-((points[i-1].y+offsetY)/(y2-y1))*canvas.height))<=canvas.height && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
+        if (points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
           stage.lineTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
         }
         if (points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
@@ -1145,7 +1192,7 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
     var offsetY = -y1;
 
     //Check if the function exists at that x value
-    if (points[Math.round(mousePos.x/canvas.width*points.length)].y) {
+    if (points[Math.round(mousePos.x/canvas.width*points.length)].y===0 || points[Math.round(mousePos.x/canvas.width*points.length)].y) {
 
       //Draw the coordinate
       stage.fillStyle="#2980b9";

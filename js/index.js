@@ -7,6 +7,24 @@ function simplifyText(event) {
   var y1 = document.getElementById("y1").value?(document.getElementById("y1").value.trim()=="auto")?"auto":parseFloat(document.getElementById("y1").value):undefined;
   var y2 = document.getElementById("y2").value?(document.getElementById("y2").value.trim()=="auto")?"auto":parseFloat(document.getElementById("y2").value):undefined;
 
+  var derive = false;
+  if (input.lastIndexOf("derive")!=-1) {
+    derive=true;
+    input = input.substring(input.lastIndexOf("derive")+6);
+  } else if (input.lastIndexOf("derivative of")!=-1) {
+    derive=true;
+    input = input.substring(input.lastIndexOf("derivative of")+13);
+  } else if (input.lastIndexOf("derivative")!=-1) {
+    derive=true;
+    input = input.substring(input.lastIndexOf("derivative")+10);
+  } else if (input.lastIndexOf("dy/dx")!=-1) {
+    derive=true;
+    input = input.substring(input.lastIndexOf("dy/dx")+5);
+  } else if (input.lastIndexOf("d/dx")!=-1) {
+    derive=true;
+    input = input.substring(input.lastIndexOf("d/dx")+4);
+  }
+
   //Makes the results pane close
   document.getElementById("wrapper").className="";
 
@@ -14,11 +32,30 @@ function simplifyText(event) {
   var timer = setTimeout(function() {
     document.getElementById("result").innerHTML = "";
 
-    //Make graph
-    var graph = XCalc.graphExpression(input, 500, 500, x1, x2, y1, y2);
+    var inputFunction = XCalc.createExpression(input);
+    var graph;
+
+    if (derive) {
+      var derivative = inputFunction.derive();
+      var derivativeGraph = XCalc.graphExpression(derivative, 500, 300, x1, x2, y1, y2);
+      graph = XCalc.graphExpression(inputFunction, 500, 300, x1, x2, y1, y2);
+    } else {
+      graph = XCalc.graphExpression(inputFunction, 500, 500, x1, x2, y1, y2);
+    }
 
     //If there are no errors, show the graph
     if (!XCalc.hasErrors()) {
+      if (derive) {
+        var derivativeFormula = document.createElement("div");
+        derivativeFormula.className = "formula";
+        derivativeFormula.innerHTML = "f ' (x) = " + derivative.prettyFormula();
+        document.getElementById("result").appendChild(derivativeFormula);
+        document.getElementById("result").appendChild(derivativeGraph.getCanvas());
+      }
+      var inputFormula = document.createElement("div");
+      inputFormula.className = "formula";
+      inputFormula.innerHTML = "f(x) = " + inputFunction.prettyFormula();
+      document.getElementById("result").appendChild(inputFormula);
       document.getElementById("result").appendChild(graph.getCanvas());
       document.getElementById("wrapper").className="open";
 
