@@ -901,6 +901,9 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
   var mousePos = new Point(0, 0);
   var stage=0;
   var img=0;
+  var timer=0;
+  var distX=0;
+  var distY=0;
 
   //Gets minimum y value in the set of points
   this.getMin = function() {
@@ -1059,7 +1062,8 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
   //Updates the canvas
   this.redraw = function() {
     if (points.length>1) {
-      stage.clearRect(0, 0, canvas.width, canvas.height);
+      stage.fillStyle = "#FFFFFF";
+      stage.fillRect(0, 0, canvas.width, canvas.height);
       stage.lineCap="round";
 
       var offsetY = -y1;
@@ -1138,7 +1142,8 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
   }.bind(this);
 
   var dragMouse = function(event) {
-    stage.clearRect(0, 0, canvas.width, canvas.height);
+    stage.fillStyle = "#FFFFFF";
+    stage.fillRect(0, 0, canvas.width, canvas.height);
     mousePos = getMousePos(event);
     var newx1 = x1-((mousePos.x-startMouse.x)/canvas.width)*(x2-x1);
     var newx2 = x2-((mousePos.x-startMouse.x)/canvas.width)*(x2-x1);
@@ -1184,37 +1189,40 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
 
   //Draws coordinates over point
   var moveMouse = function(event) {
-    stage.clearRect(0, 0, canvas.width, canvas.height);
-    stage.putImageData(img, 0, 0);
-    mousePos = getMousePos(event);
-    if (mousePos.x<0) mousePos.x=0;
-    if (mousePos.y<0) mousePos.y=0;
-    var offsetY = -y1;
+    if (distX===0 && distY===0) {
+      stage.fillStyle = "#FFFFFF";
+      stage.fillRect(0, 0, canvas.width, canvas.height);
+      stage.putImageData(img, 0, 0);
+      mousePos = getMousePos(event);
+      if (mousePos.x<0) mousePos.x=0;
+      if (mousePos.y<0) mousePos.y=0;
+      var offsetY = -y1;
 
-    //Check if the function exists at that x value
-    if (points[Math.round(mousePos.x/canvas.width*points.length)].y===0 || points[Math.round(mousePos.x/canvas.width*points.length)].y) {
+      //Check if the function exists at that x value
+      if (points[Math.round(mousePos.x/canvas.width*points.length)].y===0 || points[Math.round(mousePos.x/canvas.width*points.length)].y) {
 
-      //Draw the coordinate
-      stage.fillStyle="#2980b9";
-      stage.beginPath();
-      stage.arc(mousePos.x, canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height, 4, 0, 2*Math.PI);
-      stage.closePath();
-      stage.fill();
-      stage.fillStyle="#000";
-      stage.strokeStyle="#FFF";
-      stage.lineWidth=4;
-      stage.textBaseline="alphabetic";
-      var txt="(" + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].x*100)/100).toFixed(2) + ", " + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].y*100)/100).toFixed(2) + ")";
+        //Draw the coordinate
+        stage.fillStyle="#2980b9";
+        stage.beginPath();
+        stage.arc(mousePos.x, canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height, 4, 0, 2*Math.PI);
+        stage.closePath();
+        stage.fill();
+        stage.fillStyle="#000";
+        stage.strokeStyle="#FFF";
+        stage.lineWidth=4;
+        stage.textBaseline="alphabetic";
+        var txt="(" + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].x*100)/100).toFixed(2) + ", " + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].y*100)/100).toFixed(2) + ")";
 
-      if (mousePos.x<stage.measureText(txt).width/2+2) {
-        stage.textAlign = "left";
-      } else if (mousePos.x>canvas.width-stage.measureText(txt).width/2-2) {
-        stage.textAlign = "right";
-      } else {
-        stage.textAlign = "center";
+        if (mousePos.x<stage.measureText(txt).width/2+2) {
+          stage.textAlign = "left";
+        } else if (mousePos.x>canvas.width-stage.measureText(txt).width/2-2) {
+          stage.textAlign = "right";
+        } else {
+          stage.textAlign = "center";
+        }
+        stage.strokeText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
+        stage.fillText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
       }
-      stage.strokeText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
-      stage.fillText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
     }
   }.bind(this);
 
@@ -1228,11 +1236,29 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
   //Zooms based on scroll wheel
   var scrollZoom = function(event) {
     var delta = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
-    var distX = delta*(x2-x1)/25;
-    var distY = delta*(y2-y1)/25;
-    this.setRange(x1 + distX, x2 - distX, y1 + distY, y2 - distY);
+    distX += delta*(x2-2*distX-x1)/25;
+    distY += delta*(y2-2*distY-y1)/25;
+    var canvas2 = document.createElement("canvas");
+    canvas2.width = canvas.width;
+    canvas2.height = canvas.height;
+    var stage2 = canvas2.getContext("2d");
+    stage2.putImageData(img, 0, 0);
+    stage.clearRect(0, 0, canvas.width, canvas.height);
+    drawAxes(x1 + distX, x2 - distX, y1 + distY, y2 - distY, false);
+    stage.drawImage(canvas2, canvas.width*(1-((x2-x1)/(x2-2*distX-x1)))/2, canvas.height*(1-((y2-y1)/(y2-2*distY-y1)))/2, canvas.width*((x2-x1)/(x2-2*distX-x1)), canvas.height*((y2-y1)/(y2-2*distY-y1)));
     if (event.preventDefault) event.preventDefault();
+    clearTimeout(timer);
+    timer = setTimeout(updateZoom, 10);
     return false;
+  }.bind(this);
+
+  var updateZoom = function() {
+    stage.fillStyle = "#FFFFFF";
+    stage.fillRect(0, 0, canvas.width, canvas.height);
+    this.setRange(x1 + distX, x2 - distX, y1 + distY, y2 - distY);
+    distX=0;
+    distY=0;
+    clearTimeout(timer);
   }.bind(this);
 
   //Returns the canvas element
