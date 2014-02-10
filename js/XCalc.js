@@ -293,7 +293,7 @@ function Segment(input) {
         }
       }
     }
-  }
+  };
 
   //Recursively solve children
   this.solve = function(x) {
@@ -329,9 +329,9 @@ function Segment(input) {
       }
       if (expression.type=="section") {
         if (expression.operator.operator == "+" || expression.operator.operator == "-") {
-          if (expression.sections[0].type=="value" && expression.sections[0].coefficient==0) {
+          if (expression.sections[0].type=="value" && expression.sections[0].coefficient===0) {
             expression=expression.sections[1];
-          } else if (expression.sections[1].type=="value" && expression.sections[1].coefficient==0) {
+          } else if (expression.sections[1].type=="value" && expression.sections[1].coefficient===0) {
             expression=expression.sections[0];
           }
         } else if (expression.operator.operator == "*") {
@@ -339,7 +339,7 @@ function Segment(input) {
             expression = expression.sections[1];
           } else if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
             expression = expression.sections[0];
-          } else if ((expression.sections[0].type=="value" && expression.sections[0].coefficient==0) || (expression.sections[1].type=="value" && expression.sections[1].coefficient==0)) {
+          } else if ((expression.sections[0].type=="value" && expression.sections[0].coefficient===0) || (expression.sections[1].type=="value" && expression.sections[1].coefficient===0)) {
             expression = new Segment(0);
           }
         } else if (expression.operator.operator == "/") {
@@ -351,7 +351,7 @@ function Segment(input) {
         } else if (expression.operator.operator == "^") {
           if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
             expression = expression.sections[0];
-          } else if (expression.sections[1].type=="value" && expression.sections[1].coefficient==0) {
+          } else if (expression.sections[1].type=="value" && expression.sections[1].coefficient===0) {
             expression = new Segment(0);
           } else if (expression.sections[0].type=="value" && expression.sections[0].coefficient==1) {
             expression = new Segment(1);
@@ -670,7 +670,7 @@ function Segment(input) {
 
   this.derive = function() {
     return this.simplify().derivative().simplify();
-  }
+  };
 
   //Returns formula in divs for CSS
   this.prettyFormula = function() {
@@ -891,6 +891,9 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
   var canvas = document.createElement("canvas");
   canvas.width=width || 400;
   canvas.height=height || 400;
+  var graphCanvas = document.createElement("canvas");
+  graphCanvas.width = canvas.width;
+  graphCanvas.height = canvas.height;
   var min;
   var max;
   var x1 = (startx1===undefined)?-10:startx1;
@@ -900,6 +903,7 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
   var startMouse = new Point(0, 0);
   var mousePos = new Point(0, 0);
   var stage=0;
+  var graphStage=0;
   var img=0;
   var timer=0;
   var distX=0;
@@ -972,7 +976,7 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
     this.redraw();
   };
 
-  var drawAxes = function(_x1, _x2, _y1, _y2, redraw) {
+  var drawAxes = function(_x1, _x2, _y1, _y2) {
     stage.strokeStyle="#bdc3c7";
     stage.fillStyle="#bdc3c7";
     var limit=0;
@@ -995,25 +999,21 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
       for (i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_y2-_y1) / Math.LN10))/2) {
         if (i===0) continue;
         if (i<=_y2+50) {
-          if (redraw || (i>=y2-50)) {
-            stage.beginPath();
-            stage.moveTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-5, canvas.height-((i-_y1)/(_y2-_y1))*canvas.height);
-            stage.lineTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width+5, canvas.height-((i-_y1)/(_y2-_y1))*canvas.height);
-            stage.closePath();
-            stage.stroke();
-            stage.fillText(""+(Math.round(i*100)/100), canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-8, canvas.height-((i-_y1)/(_y2-_y1))*canvas.height);
-          }
+          stage.beginPath();
+          stage.moveTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-5, canvas.height-((i-_y1)/(_y2-_y1))*canvas.height);
+          stage.lineTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width+5, canvas.height-((i-_y1)/(_y2-_y1))*canvas.height);
+          stage.closePath();
+          stage.stroke();
+          stage.fillText(""+(Math.round(i*100)/100), canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-8, canvas.height-((i-_y1)/(_y2-_y1))*canvas.height);
         }
 
         if (i>=_y1-50) {
-          if (redraw || (-i<=y1+50)) {
-            stage.beginPath();
-            stage.moveTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-5, canvas.height-((-i-_y1)/(_y2-_y1))*canvas.height);
-            stage.lineTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width+5, canvas.height-((-i-_y1)/(_y2-_y1))*canvas.height);
-            stage.closePath();
-            stage.stroke();
-            stage.fillText(""+(Math.round(-i*100)/100), canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-8, canvas.height-((-i-_y1)/(_y2-_y1))*canvas.height);
-          }
+          stage.beginPath();
+          stage.moveTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-5, canvas.height-((-i-_y1)/(_y2-_y1))*canvas.height);
+          stage.lineTo(canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width+5, canvas.height-((-i-_y1)/(_y2-_y1))*canvas.height);
+          stage.closePath();
+          stage.stroke();
+          stage.fillText(""+(Math.round(-i*100)/100), canvas.width/2-(((_x2+_x1)/2)/(_x2-_x1))*canvas.width-8, canvas.height-((-i-_y1)/(_y2-_y1))*canvas.height);
         }
       }
     }
@@ -1035,25 +1035,21 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
       for (i=0; i<=limit; i+=Math.pow(10, Math.floor(Math.log(_x2-_x1) / Math.LN10))/2) {
         if (i===0) continue;
         if (i<=_x2+50) {
-          if (redraw || (i>=x2-50)) {
-            stage.beginPath();
-            stage.moveTo(((i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height-5);
-            stage.lineTo(((i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+5);
-            stage.closePath();
-            stage.stroke();
-            stage.fillText(""+(Math.round(i*100)/100), ((i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+8);
-          }
+          stage.beginPath();
+          stage.moveTo(((i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height-5);
+          stage.lineTo(((i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+5);
+          stage.closePath();
+          stage.stroke();
+          stage.fillText(""+(Math.round(i*100)/100), ((i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+8);
         }
 
         if (i>=_x1-50) {
-          if (redraw || (-i<=x1+50)) {
-            stage.beginPath();
-            stage.moveTo(((-i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height-5);
-            stage.lineTo(((-i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+5);
-            stage.closePath();
-            stage.stroke();
-            stage.fillText(""+(Math.round(-i*100)/100), ((-i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+8);
-          }
+          stage.beginPath();
+          stage.moveTo(((-i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height-5);
+          stage.lineTo(((-i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+5);
+          stage.closePath();
+          stage.stroke();
+          stage.fillText(""+(Math.round(-i*100)/100), ((-i-_x1)/(_x2-_x1))*canvas.width, canvas.height/2+(((_y2+_y1)/2)/(_y2-_y1))*canvas.height+8);
         }
       }
     }
@@ -1064,35 +1060,37 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
     if (points.length>1) {
       stage.fillStyle = "#FFFFFF";
       stage.fillRect(0, 0, canvas.width, canvas.height);
-      stage.lineCap="round";
+      graphStage.clearRect(0, 0, canvas.width, canvas.height);
+      graphStage.lineCap="round";
 
       var offsetY = -y1;
 
-      drawAxes(x1, x2, y1, y2, true);
+      drawAxes(x1, x2, y1, y2);
 
       //Draw all the points
-      stage.strokeStyle="#2980b9";
-      stage.lineWidth=1;
-      stage.beginPath();
+      graphStage.strokeStyle="#2980b9";
+      graphStage.lineWidth=1;
+      graphStage.beginPath();
 
       //Find the first point that exists
       var i=0;
       while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
-      stage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+      graphStage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
       for (i++; i<points.length; i++) {
         if (Math.abs((canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height)-(canvas.height-((points[i-1].y+offsetY)/(y2-y1))*canvas.height))<=canvas.height && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
-          stage.lineTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+          graphStage.lineTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
         }
         if (points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
-          stage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+          graphStage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
         } else {
-          stage.moveTo((i/points.length)*canvas.width, canvas.height-((0+offsetY)/(y2-y1))*canvas.height);
+          graphStage.moveTo((i/points.length)*canvas.width, canvas.height-((0+offsetY)/(y2-y1))*canvas.height);
         }
       }
-      stage.closePath();
-      stage.stroke();
+      graphStage.closePath();
+      graphStage.stroke();
 
-      img = stage.getImageData(0, 0, canvas.width, canvas.height);
+      img = graphStage.getImageData(0, 0, canvas.width, canvas.height);
+      stage.drawImage(graphCanvas, 0, 0);
     } else {
       XCalc.log("Not enough points to graph.");
     }
@@ -1156,8 +1154,8 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
 
     //Otherwise, move around the drawing we already have
     } else {
-      drawAxes(newx1, newx2, newy1, newy2, false);
-      stage.putImageData(img, mousePos.x-startMouse.x, mousePos.y-startMouse.y);
+      drawAxes(newx1, newx2, newy1, newy2);
+      stage.drawImage(graphCanvas, mousePos.x-startMouse.x, mousePos.y-startMouse.y);
     }
 
     if (event.preventDefault) event.preventDefault();
@@ -1192,7 +1190,8 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
     if (distX===0 && distY===0) {
       stage.fillStyle = "#FFFFFF";
       stage.fillRect(0, 0, canvas.width, canvas.height);
-      stage.putImageData(img, 0, 0);
+      drawAxes(x1, x2, y1, y2);
+      stage.drawImage(graphCanvas, 0, 0);
       mousePos = getMousePos(event);
       if (mousePos.x<0) mousePos.x=0;
       if (mousePos.y<0) mousePos.y=0;
@@ -1229,8 +1228,10 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
   var endMouseOver = function(event) {
     canvas.removeEventListener("mousemove", moveMouse, false);
     canvas.removeEventListener("mouseout", endMouseOver, false);
-    stage.clearRect(0, 0, canvas.width, canvas.height);
-    stage.putImageData(img, 0, 0);
+    stage.fillStyle = "#FFFFFF";
+    stage.fillRect(0, 0, canvas.width, canvas.height);
+    drawAxes(x1, x2, y1, y2);
+    stage.drawImage(graphCanvas, 0, 0);
   }.bind(this);
 
   //Zooms based on scroll wheel
@@ -1238,17 +1239,13 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
     var delta = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
     distX += delta*(x2-2*distX-x1)/25;
     distY += delta*(y2-2*distY-y1)/25;
-    var canvas2 = document.createElement("canvas");
-    canvas2.width = canvas.width;
-    canvas2.height = canvas.height;
-    var stage2 = canvas2.getContext("2d");
-    stage2.putImageData(img, 0, 0);
-    stage.clearRect(0, 0, canvas.width, canvas.height);
-    drawAxes(x1 + distX, x2 - distX, y1 + distY, y2 - distY, false);
-    stage.drawImage(canvas2, canvas.width*(1-((x2-x1)/(x2-2*distX-x1)))/2, canvas.height*(1-((y2-y1)/(y2-2*distY-y1)))/2, canvas.width*((x2-x1)/(x2-2*distX-x1)), canvas.height*((y2-y1)/(y2-2*distY-y1)));
+    stage.fillStyle = "#FFFFFF";
+    stage.fillRect(0, 0, canvas.width, canvas.height);
+    drawAxes(x1 + distX, x2 - distX, y1 + distY, y2 - distY);
+    stage.drawImage(graphCanvas, canvas.width*(1-((x2-x1)/(x2-2*distX-x1)))/2, canvas.height*(1-((y2-y1)/(y2-2*distY-y1)))/2, canvas.width*((x2-x1)/(x2-2*distX-x1)), canvas.height*((y2-y1)/(y2-2*distY-y1)));
     if (event.preventDefault) event.preventDefault();
     clearTimeout(timer);
-    timer = setTimeout(updateZoom, 10);
+    timer = setTimeout(updateZoom, 50);
     return false;
   }.bind(this);
 
@@ -1289,6 +1286,8 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
     stage = canvas.getContext("2d");
     stage.font = "12px sans-serif";
     canvas.style.backgroundColor="#FFF";
+
+    graphStage = graphCanvas.getContext("2d");
 
     //Make points
     this.update();

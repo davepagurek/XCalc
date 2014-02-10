@@ -64,7 +64,7 @@ input[type="text"]:focus {
   margin-right:5px;
 }
 #function input[type="text"] {
-  width:83%;
+  width:85%;
   display:inline-block;
   height:20px;
   float:right;
@@ -172,4 +172,12 @@ canvas:last-child {
   display:block;
   border-top:1px solid #FFF;
   padding:0 20px;
+}
+
+@media all and (max-width:700px) {
+  #github {
+    position:relative;
+    width:auto;
+    display:block;
+  }
 }

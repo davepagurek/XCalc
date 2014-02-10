@@ -9,6 +9,8 @@
 
   <link rel="stylesheet" href="css/style.css" media="screen" type="text/css" />
 
+  <meta name="viewport" content="width=device-width; initial-scale=1.0" />
+
   <script src="js/XCalc.js" type="text/javascript"></script>
 
   <script src="js/index.js" type="text/javascript"></script>
@@ -16,19 +18,19 @@
 </head>
 
 <body>
-  <a id="github" href="https://github.com/pahgawk/XCalc">Find this on Github!</a>
   <div id="top"><h1>XCalc.js Demo</h1>
   	<div id="function">
-  		<label>f(x) = </label><input type="text" value="(x+4)^2*(x-6)+60sinx" id="input" />
+  		<label>y = </label><input type="text" value="(x+4)^2*(x-6)+60sinx" id="input" />
   	</div>
   	<div id="range">
   		From <input type="text" value="" placeholder="-10" id="x1" /> &lt; x &lt; <input type="text" value="" placeholder="10" id="x2" /> and <input type="text" placeholder="auto" value="" id="y1" /> &lt; y &lt; <input type="text" placeholder="auto" value="" id="y2" />
   	</div>
   	<input type="button" value="Graph" id="graph" />
   </div>
-<div id="wrapper">
-<div id="result"></div>
-</div>
+  <div id="wrapper">
+    <div id="result"></div>
+  </div>
+  <a id="github" href="https://github.com/pahgawk/XCalc">Find this on Github!</a>
 
 </body>
 

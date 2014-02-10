@@ -30,6 +30,9 @@ function simplifyText(event) {
 
   //wait for pane to close
   var timer = setTimeout(function() {
+    var width=500;
+    if (document.getElementById("wrapper").offsetWidth<550) width = document.getElementById("wrapper").offsetWidth - 50;
+
     document.getElementById("result").innerHTML = "";
 
     var inputFunction = XCalc.createExpression(input);
@@ -37,10 +40,10 @@ function simplifyText(event) {
 
     if (derive) {
       var derivative = inputFunction.derive();
-      var derivativeGraph = XCalc.graphExpression(derivative, 500, 300, x1, x2, y1, y2);
-      graph = XCalc.graphExpression(inputFunction, 500, 300, x1, x2, y1, y2);
+      var derivativeGraph = XCalc.graphExpression(derivative, width, 300, x1, x2, y1, y2);
+      graph = XCalc.graphExpression(inputFunction, width, 300, x1, x2, y1, y2);
     } else {
-      graph = XCalc.graphExpression(inputFunction, 500, 500, x1, x2, y1, y2);
+      graph = XCalc.graphExpression(inputFunction, width, 500, x1, x2, y1, y2);
     }
 
     //If there are no errors, show the graph
@@ -48,13 +51,13 @@ function simplifyText(event) {
       if (derive) {
         var derivativeFormula = document.createElement("div");
         derivativeFormula.className = "formula";
-        derivativeFormula.innerHTML = "f ' (x) = " + derivative.prettyFormula();
+        derivativeFormula.innerHTML = "y' = " + derivative.prettyFormula();
         document.getElementById("result").appendChild(derivativeFormula);
         document.getElementById("result").appendChild(derivativeGraph.getCanvas());
       }
       var inputFormula = document.createElement("div");
       inputFormula.className = "formula";
-      inputFormula.innerHTML = "f(x) = " + inputFunction.prettyFormula();
+      inputFormula.innerHTML = "y = " + inputFunction.prettyFormula();
       document.getElementById("result").appendChild(inputFormula);
       document.getElementById("result").appendChild(graph.getCanvas());
       document.getElementById("wrapper").className="open";
