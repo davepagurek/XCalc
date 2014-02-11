@@ -40,10 +40,10 @@ function simplifyText(event) {
 
     if (derive) {
       var derivative = inputFunction.derive();
-      var derivativeGraph = XCalc.graphExpression(derivative, width, 300, x1, x2, y1, y2);
-      graph = XCalc.graphExpression(inputFunction, width, 300, x1, x2, y1, y2);
+      var derivativeGraph = XCalc.graphExpression(derivative, width, Math.round(width*0.4), x1, x2, y1, y2);
+      graph = XCalc.graphExpression(inputFunction, width, Math.round(width*0.5), x1, x2, y1, y2);
     } else {
-      graph = XCalc.graphExpression(inputFunction, width, 500, x1, x2, y1, y2);
+      graph = XCalc.graphExpression(inputFunction, width, Math.round(width*0.8), x1, x2, y1, y2);
     }
 
     //If there are no errors, show the graph

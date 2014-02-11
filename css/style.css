@@ -64,6 +64,7 @@ input[type="text"]:focus {
   margin-right:5px;
 }
 #function input[type="text"] {
+  margin:0;
   width:85%;
   display:inline-block;
   height:20px;
@@ -93,6 +94,9 @@ input[type="text"]:focus {
 }
 #range input[type="text"]:focus {
   background-color:#2e4052;
+}
+.rangeSection {
+  display:inline-block;
 }
 #graph {
   margin:20px auto 0 auto;
@@ -179,5 +183,26 @@ canvas:last-child {
     position:relative;
     width:auto;
     display:block;
+  }
+  h1 {
+    font-size:24px; 
+  }
+}
+
+@media all and (max-width:500px) {
+  #top {
+    display:block;
+    position:relative;
+  }
+  #function label {
+    width:10%;
+    text-align:right;
+  }
+  #function input[type="text"] {
+    width:70%;
+  }
+  .rangeSection {
+    display:block;
+    margin-bottom:5px;
   }
 }
