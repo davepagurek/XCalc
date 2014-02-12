@@ -328,11 +328,15 @@ function Segment(input) {
         expression.sections[i] = expression.sections[i].simplify();
       }
       if (expression.type=="section") {
-        if (expression.operator.operator == "+" || expression.operator.operator == "-") {
+        if (expression.operator.operator == "+") {
           if (expression.sections[0].type=="value" && expression.sections[0].coefficient===0) {
             expression=expression.sections[1];
           } else if (expression.sections[1].type=="value" && expression.sections[1].coefficient===0) {
             expression=expression.sections[0];
+          }
+        } else if (expression.operator.operator == "-") {
+          if (expression.sections[1].type=="value" && expression.sections[1].coefficient===0) {
+            expression=expression.sections[1];
           }
         } else if (expression.operator.operator == "*") {
           if (expression.sections[0].type=="value" && expression.sections[0].coefficient==1) {
@@ -414,14 +418,14 @@ function Segment(input) {
       } else if (expression.operator.operator == "/") {
         s1 = new Segment(0);
         s1.type = "section";
-        s1.sections.push(expression.sections[1].derivative());
-        s1.sections.push(expression.sections[0]);
+        s1.sections.push(expression.sections[0].derivative());
+        s1.sections.push(expression.sections[1]);
         s1.operator = new Operator("*");
 
         s2 = new Segment(0);
         s2.type = "section";
-        s2.sections.push(expression.sections[0].derivative());
-        s2.sections.push(expression.sections[1]);
+        s2.sections.push(expression.sections[1].derivative());
+        s2.sections.push(expression.sections[0]);
         s2.operator = new Operator("*");
 
         var num = new Segment(0);
@@ -1078,12 +1082,12 @@ function Graph(value, width, height, startx1, startx2, starty1, starty2) {
       graphStage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
       for (i++; i<points.length; i++) {
         if (Math.abs((canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height)-(canvas.height-((points[i-1].y+offsetY)/(y2-y1))*canvas.height))<=canvas.height && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
-          graphStage.lineTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+          graphStage.lineTo((i/(points.length-1))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
         }
         if (points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
-          graphStage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+          graphStage.moveTo((i/(points.length-1))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
         } else {
-          graphStage.moveTo((i/points.length)*canvas.width, canvas.height-((0+offsetY)/(y2-y1))*canvas.height);
+          graphStage.moveTo((i/(points.length-1))*canvas.width, canvas.height-((0+offsetY)/(y2-y1))*canvas.height);
         }
       }
       graphStage.closePath();
