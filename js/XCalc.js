@@ -319,7 +319,7 @@ function Segment(input) {
   };
 
   this.simplify = function() {
-    var expression = this;
+    var expression = new Segment(this);
 
     //If the segment is a variable, leave it as is.
     //If it contains a variable in its subsections, simplify subsections
@@ -345,6 +345,14 @@ function Segment(input) {
             expression = expression.sections[0];
           } else if ((expression.sections[0].type=="value" && expression.sections[0].coefficient===0) || (expression.sections[1].type=="value" && expression.sections[1].coefficient===0)) {
             expression = new Segment(0);
+          } else if (expression.sections[1].type=="section" && expression.sections[1].sections[0].type=="value" && expression.sections[1].sections[0].coefficient==1) {
+            expression.operator = new Operator("/");
+            expression.sections[1] = expression.sections[1].sections[1];
+          } else if (expression.sections[0].type=="section" && expression.sections[0].sections[0].type=="value" && expression.sections[0].sections[0].coefficient==1) {
+            expression.operator = new Operator("/");
+            var num = expression.sections[1];
+            expression.sections[1] = expression.sections[0].sections[1];
+            expression.sections[0] = num;
           }
         } else if (expression.operator.operator == "/") {
           if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
@@ -359,6 +367,22 @@ function Segment(input) {
             expression = new Segment(0);
           } else if (expression.sections[0].type=="value" && expression.sections[0].coefficient==1) {
             expression = new Segment(1);
+          } else if (expression.sections[0].type=="section" && (expression.sections[0].operator.operator=="/" || expression.sections[0].operator.operator=="/")) {
+            var num = new Segment(0);
+            num.type="section";
+            num.operator = new Operator("^");
+            num.sections.push(expression.sections[0].sections[0]);
+            num.sections.push(expression.sections[1]);
+
+            var denom = new Segment(0);
+            denom.type="section";
+            denom.operator = new Operator("^");
+            denom.sections.push(expression.sections[0].sections[1]);
+            denom.sections.push(expression.sections[1]);
+
+            expression.operator = expression.sections[0].operator;
+            expression.sections[0] = num;
+            expression.sections[1] = denom;
           }
         }
       }
@@ -369,11 +393,16 @@ function Segment(input) {
       expression.type="value";
     }
 
-    return expression;
+    //Keep simplifying until it's the same
+    if (this.equals(expression)) {
+      return this;
+    } else {
+      return expression.simplify();
+    }
   };
 
   this.derivative = function() {
-    var expression = this;
+    var expression = new Segment(this);
     var deriv = new Segment(0);
     var s1, s2, s3, s4;
 
@@ -867,6 +896,16 @@ function Segment(input) {
     } else if (typeof(input)=="number") {
       this.coefficient = input;
       this.type = "value";
+    } else if (input.simplify) {
+      this.coefficient = input.coefficient;
+      this.operator = input.operator;
+      this.mathFunction = input.mathFunction;
+      this.variable = input.variable;
+      this.type=input.type;
+      this.sections=[];
+      for (var i=0; i<input.sections.length; i++) {
+        this.sections.push(new Segment(input.sections[i]));
+      }
     }
   } else {
     XCalc.log("Segment has no input.");
