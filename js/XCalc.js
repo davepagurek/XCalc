@@ -353,12 +353,30 @@ function Segment(input) {
             var num = expression.sections[1];
             expression.sections[1] = expression.sections[0].sections[1];
             expression.sections[0] = num;
+          } else if (expression.sections[0].type=="section" && expression.sections[0].operator.operator=="^" && expression.sections[1].type=="section" && expression.sections[1].operator.operator=="^" && expression.sections[0].sections[0].equals(expression.sections[1].sections[0])) {
+            var exponent = new Segment(0);
+            exponent.type="section";
+            exponent.sections.push(expression.sections[0].sections[1]);
+            exponent.sections.push(expression.sections[1].sections[1]);
+            exponent.operator = new Operator("+");
+            expression.sections[0]=expression.sections[0].sections[0];
+            expression.sections[1]=exponent;
+            expression.operator = new Operator("^");
           }
         } else if (expression.operator.operator == "/") {
           if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
             expression = expression.sections[0];
           } else if (expression.sections[0].equals(expression.sections[1])) {
             expression = new Segment(1);
+          } else if (expression.sections[0].type=="section" && expression.sections[0].operator.operator=="^" && expression.sections[1].type=="section" && expression.sections[1].operator.operator=="^" && expression.sections[0].sections[0].equals(expression.sections[1].sections[0])) {
+            var exponent = new Segment(0);
+            exponent.type="section";
+            exponent.sections.push(expression.sections[0].sections[1]);
+            exponent.sections.push(expression.sections[1].sections[1]);
+            exponent.operator = new Operator("-");
+            expression.sections[0]=expression.sections[0].sections[0];
+            expression.sections[1]=exponent;
+            expression.operator = new Operator("^");
           }
         } else if (expression.operator.operator == "^") {
           if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
