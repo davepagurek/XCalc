@@ -2,8 +2,8 @@ function simplifyText(event) {
 
   //Grabs data from input elements
   var input = document.getElementById("input").value;
-  var x1 = (document.getElementById("x1").value=="")?undefined:parseFloat(document.getElementById("x1").value);
-  var x2 = (document.getElementById("x2").value=="")?undefined:parseFloat(document.getElementById("x2").value);
+  var x1 = (document.getElementById("x1").value==="")?undefined:parseFloat(document.getElementById("x1").value);
+  var x2 = (document.getElementById("x2").value==="")?undefined:parseFloat(document.getElementById("x2").value);
   var y1 = document.getElementById("y1").value?(document.getElementById("y1").value.trim()=="auto")?"auto":parseFloat(document.getElementById("y1").value):undefined;
   var y2 = document.getElementById("y2").value?(document.getElementById("y2").value.trim()=="auto")?"auto":parseFloat(document.getElementById("y2").value):undefined;
 
@@ -37,10 +37,12 @@ function simplifyText(event) {
 
     var inputFunction = XCalc.createExpression(input);
     var graph;
+    var derivative;
+    var derivativeGraph;
 
     if (derive) {
-      var derivative = inputFunction.derive();
-      var derivativeGraph = XCalc.graphExpression(derivative, width, Math.round(width*0.4), x1, x2, y1, y2);
+      derivative = inputFunction.derive();
+      derivativeGraph = XCalc.graphExpression(derivative, width, Math.round(width*0.4), x1, x2, y1, y2);
       graph = XCalc.graphExpression(inputFunction, width, Math.round(width*0.5), x1, x2, y1, y2);
     } else {
       graph = XCalc.graphExpression(inputFunction, width, Math.round(width*0.8), x1, x2, y1, y2);
@@ -57,7 +59,7 @@ function simplifyText(event) {
       }
       var inputFormula = document.createElement("div");
       inputFormula.className = "formula";
-      inputFormula.innerHTML = "y = " + inputFunction.prettyFormula();
+      inputFormula.innerHTML = "y = " + inputFunction.simplify().prettyFormula();
       document.getElementById("result").appendChild(inputFormula);
       document.getElementById("result").appendChild(graph.getCanvas());
       document.getElementById("wrapper").className="open";
