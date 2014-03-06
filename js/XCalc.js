@@ -319,23 +319,26 @@ function Segment(input) {
   };
   
   var simplifyMultiplication = function(e1, e2) {
-    var final;
+    var final = new Segment(0);
+    final.type="section";
+    final.operator = new Operator("*");
+    final.sections=[];
+    final.sections.push(e1);
+    final.sections.push(e2);
     if (e1.type=="value" && e1.coefficient==1) {
-      final = new Segment(e1);
-    } else if (e2.type=="value" && e2.coefficient==1) {
       final = new Segment(e2);
+    } else if (e2.type=="value" && e2.coefficient==1) {
+      final = new Segment(e1);
     } else if ((e1.type=="value" && e1.coefficient===0) || (e2.type=="value" && e2.coefficient===0)) {
       final = new Segment(0);
     } else if (e2.type=="section" && e2.operator.operator=="/" && e2.sections[0].type=="value" && e2.sections[0].coefficient==1) {
-      final = new Segment(0);
-      final.type="section";
       final.operator = new Operator("/");
+      final.sections=[];
       final.sections.push(e1);
       final.sections.push(e2.sections[1]);
     } else if (e1.type=="section" && e1.operator.operator=="/" && e1.sections[0].type=="value" && e1.sections[0].coefficient==1) {
-      final = new Segment(0);
-      final.type="section";
       final.operator = new Operator("/");
+      final.sections=[];
       final.sections.push(e2);
       final.sections.push(e1.sections[1]);
     } else if (e1.type=="section" && e1.operator.operator=="^" && e2.type=="section" && e2.operator.operator=="^" && e1.sections[0].equals(e2.sections[0])) {
@@ -344,39 +347,32 @@ function Segment(input) {
       exponent.sections.push(e1.sections[1]);
       exponent.sections.push(e2.sections[1]);
       exponent.operator = new Operator("+");
-      final = new Segment(0);
-      final.type="section";
       final.operator = new Operator("^");
+      final.sections=[];
       final.sections.push(e1.sections[0]);
       final.sections.push(exponent);
     } else if (e1.type=="section" && e1.operator.operator=="*") {
-      final = new Segment(0);
-      final.type = "section";
       final.operator = new Operator("*");
-      if (e1.sections[0].containsX()) {
+      if (e1.sections[0].containsX() && !e1.sections[1].containsX()) {
+        final.sections=[];
         final.sections.push(simplifyMultiplication(e1.sections[0], e2));
         final.sections.push(e1.sections[1]);
-      } else {
+      } else if (e1.sections[1].containsX() && !e1.sections[0].containsX()) {
+        final.sections=[];
         final.sections.push(simplifyMultiplication(e1.sections[1], e2));
         final.sections.push(e1.sections[0]);
       }
     } else if (e2.type=="section" && e2.operator.operator=="*") {
-      final = new Segment(0);
-      final.type = "section";
       final.operator = new Operator("*");
-      if (e2.sections[0].containsX()) {
+      if (e2.sections[0].containsX() && !e2.sections[1].containsX()) {
+        final.sections=[];
         final.sections.push(simplifyMultiplication(e2.sections[0], e1));
         final.sections.push(e2.sections[1]);
-      } else {
+      } else if (e2.sections[1].containsX() && !e2.sections[0].containsX()) {
+        final.sections=[];
         final.sections.push(simplifyMultiplication(e2.sections[1], e1));
         final.sections.push(e2.sections[0]);
       }
-    } else {
-      final = new Segment(0);
-      final.type="section";
-      final.operator = new Operator("*");
-      final.sections.push(e1);
-      final.sections.push(e2);
     }
     return final;
   };
