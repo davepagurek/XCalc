@@ -367,31 +367,59 @@ function Segment(input) {
             final = new Segment(0);
             final.operator = new Operator("*");
             final.type="section";
-            if (expression.sections[0].sections[0].containsX() && !expression.sections[0].sections[1].containsX()) {
-              final.sections.push(expression.sections[0].sections[0]);
-              final.sections.push(expression.sections[1]);
-              expression.sections[0]=expression.sections[0].sections[1];
-              expression.sections[1]=final;
-            } else if (expression.sections[0].sections[1].containsX() && !expression.sections[0].sections[0].containsX()) {
-              final.sections.push(expression.sections[0].sections[1]);
-              final.sections.push(expression.sections[1]);
-              expression.sections[0]=expression.sections[0].sections[0];
-              expression.sections[1]=final;
+            if (!expression.sections[0].sections[1].containsX()) {
+              if (expression.sections[0].sections[0].containsX()) {
+                final.sections.push(expression.sections[0].sections[0]);
+                final.sections.push(expression.sections[1]);
+                expression.sections[0]=expression.sections[0].sections[1];
+                expression.sections[1]=final;
+              } else {
+                final.sections.push(expression.sections[0].sections[1]);
+                final.sections.push(expression.sections[1]);
+                expression.sections[0]=expression.sections[0].sections[0];
+                expression.sections[1]=final;
+              }
+            } else if (!expression.sections[0].sections[0].containsX()) {
+              if (expression.sections[0].sections[1].containsX()) {
+                final.sections.push(expression.sections[0].sections[1]);
+                final.sections.push(expression.sections[1]);
+                expression.sections[0]=expression.sections[0].sections[0];
+                expression.sections[1]=final;
+              } else {
+                final.sections.push(expression.sections[0].sections[0]);
+                final.sections.push(expression.sections[1]);
+                expression.sections[0]=expression.sections[0].sections[1];
+                expression.sections[1]=final;
+              }
             }
           } else if (expression.sections[1].type=="section" && expression.sections[1].operator.operator=="*") {
             final = new Segment(0);
             final.operator = new Operator("*");
             final.type="section";
-            if (expression.sections[1].sections[0].containsX() && !expression.sections[1].sections[1].containsX()) {
-              final.sections.push(expression.sections[1].sections[0]);
-              final.sections.push(expression.sections[0]);
-              expression.sections[1]=expression.sections[1].sections[1];
-              expression.sections[0] = final;
-            } else if (expression.sections[1].sections[1].containsX() && !expression.sections[1].sections[0].containsX()) {
-              final.sections.push(expression.sections[1].sections[1]);
-              final.sections.push(expression.sections[0]);
-              expression.sections[1]=(expression.sections[1].sections[0]);
-              expression.sections[0] = final;
+            if (!expression.sections[1].sections[1].containsX()) {
+              if (expression.sections[1].sections[0].containsX()) {
+                final.sections.push(expression.sections[1].sections[0]);
+                final.sections.push(expression.sections[0]);
+                expression.sections[1]=expression.sections[1].sections[1];
+                expression.sections[0] = final;
+              } else {
+                final.sections.push(expression.sections[1].sections[1]);
+                final.sections.push(expression.sections[0]);
+                expression.sections[1]=expression.sections[1].sections[0];
+                expression.sections[0] = final;
+              }
+            } else if (!expression.sections[1].sections[0].containsX()) {
+              if (expression.sections[1].sections[1].containsX()) {
+                final.sections.push(expression.sections[1].sections[1]);
+                final.sections.push(expression.sections[0]);
+                expression.sections[1]=(expression.sections[1].sections[0]);
+                expression.sections[0] = final;
+              } else {
+                final.sections.push(expression.sections[1].sections[0]);
+                final.sections.push(expression.sections[0]);
+                expression.sections[1]=(expression.sections[1].sections[1]);
+                expression.sections[0] = final;
+              }
             }
           }
         } else if (expression.operator.operator == "/") {
