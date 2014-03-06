@@ -317,68 +317,10 @@ function Segment(input) {
   this.result = function(x) {
     return this.solve(x).coefficient;
   };
-  
-  var simplifyMultiplication = function(e1, e2) {
-    var final = new Segment(0);
-    final.type="section";
-    final.operator = new Operator("*");
-    final.sections=[];
-    final.sections.push(e1);
-    final.sections.push(e2);
-    if (e1.type=="value" && e1.coefficient==1) {
-      final = new Segment(e2);
-    } else if (e2.type=="value" && e2.coefficient==1) {
-      final = new Segment(e1);
-    } else if ((e1.type=="value" && e1.coefficient===0) || (e2.type=="value" && e2.coefficient===0)) {
-      final = new Segment(0);
-    } else if (e2.type=="section" && e2.operator.operator=="/" && e2.sections[0].type=="value" && e2.sections[0].coefficient==1) {
-      final.operator = new Operator("/");
-      final.sections=[];
-      final.sections.push(e1);
-      final.sections.push(e2.sections[1]);
-    } else if (e1.type=="section" && e1.operator.operator=="/" && e1.sections[0].type=="value" && e1.sections[0].coefficient==1) {
-      final.operator = new Operator("/");
-      final.sections=[];
-      final.sections.push(e2);
-      final.sections.push(e1.sections[1]);
-    } else if (e1.type=="section" && e1.operator.operator=="^" && e2.type=="section" && e2.operator.operator=="^" && e1.sections[0].equals(e2.sections[0])) {
-      var exponent = new Segment(0);
-      exponent.type="section";
-      exponent.sections.push(e1.sections[1]);
-      exponent.sections.push(e2.sections[1]);
-      exponent.operator = new Operator("+");
-      final.operator = new Operator("^");
-      final.sections=[];
-      final.sections.push(e1.sections[0]);
-      final.sections.push(exponent);
-    } else if (e1.type=="section" && e1.operator.operator=="*") {
-      final.operator = new Operator("*");
-      if (e1.sections[0].containsX() && !e1.sections[1].containsX()) {
-        final.sections=[];
-        final.sections.push(simplifyMultiplication(e1.sections[0], e2));
-        final.sections.push(e1.sections[1]);
-      } else if (e1.sections[1].containsX() && !e1.sections[0].containsX()) {
-        final.sections=[];
-        final.sections.push(simplifyMultiplication(e1.sections[1], e2));
-        final.sections.push(e1.sections[0]);
-      }
-    } else if (e2.type=="section" && e2.operator.operator=="*") {
-      final.operator = new Operator("*");
-      if (e2.sections[0].containsX() && !e2.sections[1].containsX()) {
-        final.sections=[];
-        final.sections.push(simplifyMultiplication(e2.sections[0], e1));
-        final.sections.push(e2.sections[1]);
-      } else if (e2.sections[1].containsX() && !e2.sections[0].containsX()) {
-        final.sections=[];
-        final.sections.push(simplifyMultiplication(e2.sections[1], e1));
-        final.sections.push(e2.sections[0]);
-      }
-    }
-    return final;
-  };
 
   this.simplify = function() {
     var expression = new Segment(this);
+    var final;
 
     //If the segment is a variable, leave it as is.
     //If it contains a variable in its subsections, simplify subsections
@@ -398,7 +340,60 @@ function Segment(input) {
             expression=expression.sections[1];
           }
         } else if (expression.operator.operator == "*") {
-          expression = simplifyMultiplication(expression.sections[0], expression.sections[1]);
+          if (expression.sections[0].type=="value" && expression.sections[0].coefficient==1) {
+            expression = new Segment(expression.sections[1]);
+          } else if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
+            expression = new Segment(expression.sections[0]);
+          } else if ((expression.sections[0].type=="value" && expression.sections[0].coefficient===0) || (expression.sections[1].type=="value" && expression.sections[1].coefficient===0)) {
+            expression = new Segment(0);
+          } else if (expression.sections[1].type=="section" && expression.sections[1].operator.operator=="/" && expression.sections[1].sections[0].type=="value" && expression.sections[1].sections[0].coefficient==1) {
+            expression.operator = new Operator("/");
+            expression.sections[1]=expression.sections[1].sections[1];
+          } else if (expression.sections[0].type=="section" && expression.sections[0].operator.operator=="/" && expression.sections[0].sections[0].type=="value" && expression.sections[0].sections[0].coefficient==1) {
+            expression.operator = new Operator("/");
+            var num = expression.sections[1];
+            expression.sections[1] = expression.sections[0].sections[1];
+            expression.sections[0] = num;
+          } else if (expression.sections[0].type=="section" && expression.sections[0].operator.operator=="^" && expression.sections[1].type=="section" && expression.sections[1].operator.operator=="^" && expression.sections[0].sections[0].equals(expression.sections[1].sections[0])) {
+            var exponent = new Segment(0);
+            exponent.type="section";
+            exponent.sections.push(expression.sections[0].sections[1]);
+            exponent.sections.push(expression.sections[1].sections[1]);
+            exponent.operator = new Operator("+");
+            expression.sections[0]=expression.sections[0].sections[0];
+            expression.sections[1]=exponent;
+            expression.operator = new Operator("^");
+          } else if (expression.sections[0].type=="section" && expression.sections[0].operator.operator=="*") {
+            final = new Segment(0);
+            final.operator = new Operator("*");
+            final.type="section";
+            if (expression.sections[0].sections[0].containsX() && !expression.sections[0].sections[1].containsX()) {
+              final.sections.push(expression.sections[0].sections[0]);
+              final.sections.push(expression.sections[1]);
+              expression.sections[0]=expression.sections[0].sections[1];
+              expression.sections[1]=final;
+            } else if (expression.sections[0].sections[1].containsX() && !expression.sections[0].sections[0].containsX()) {
+              final.sections.push(expression.sections[0].sections[1]);
+              final.sections.push(expression.sections[1]);
+              expression.sections[0]=expression.sections[0].sections[0];
+              expression.sections[1]=final;
+            }
+          } else if (expression.sections[1].type=="section" && expression.sections[1].operator.operator=="*") {
+            final = new Segment(0);
+            final.operator = new Operator("*");
+            final.type="section";
+            if (expression.sections[1].sections[0].containsX() && !expression.sections[1].sections[1].containsX()) {
+              final.sections.push(expression.sections[1].sections[0]);
+              final.sections.push(expression.sections[0]);
+              expression.sections[1]=expression.sections[1].sections[1];
+              expression.sections[0] = final;
+            } else if (expression.sections[1].sections[1].containsX() && !expression.sections[1].sections[0].containsX()) {
+              final.sections.push(expression.sections[1].sections[1]);
+              final.sections.push(expression.sections[0]);
+              expression.sections[1]=(expression.sections[1].sections[0]);
+              expression.sections[0] = final;
+            }
+          }
         } else if (expression.operator.operator == "/") {
           if (expression.sections[1].type=="value" && expression.sections[1].coefficient==1) {
             expression = expression.sections[0];
