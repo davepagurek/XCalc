@@ -42,8 +42,8 @@ function simplifyText(event) {
 
     if (derive) {
       derivative = inputFunction.derive();
-      derivativeGraph = XCalc.graphExpression(derivative, width, Math.round(width*0.4), x1, x2, y1, y2);
-      graph = XCalc.graphExpression(inputFunction, width, Math.round(width*0.5), x1, x2, y1, y2);
+      derivativeGraph = XCalc.graphExpression(derivative, width, Math.round(width*0.6), x1, x2, y1, y2);
+      graph = XCalc.graphExpression(inputFunction, width, Math.round(width*0.6), x1, x2, y1, y2);
     } else {
       graph = XCalc.graphExpression(inputFunction, width, Math.round(width*0.8), x1, x2, y1, y2);
     }

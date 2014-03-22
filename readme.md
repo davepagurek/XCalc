@@ -27,6 +27,33 @@ var result = expression.result(x);
 ```
 If an x value is not specified, x defaults to zero.
 
+Expressions can be derived as well:
+```javascript
+var x=2;
+var rateOfChange = expression.derive().result(x);
+```
+
+To get the formula of an expression as a string with HTML that can be formatted nicely (see the example CSS file):
+```javascript
+var formulaDiv = document.createElement("div");
+formulaDiv.innerHTML = expression.prettyFormula();
+document.getElementById("resultDiv").appendChild(formulaDiv);
+```
+
+To get the formula of an expression as a plaintext string:
+```javascript
+var formula = document.createElement("p");
+formula.innerHTML = expression.formula();
+document.getElementById("resultDiv").appendChild(formula);
+```
+
+To simplify the formula before getting it:
+```javascript
+var formula = document.createElement("p");
+formula.innerHTML = expression.simplify().formula();
+document.getElementById("resultDiv").appendChild(formula);
+```
+
 <h3>Graphs</h3>
 XCalc graphs are created like this:
 
@@ -117,4 +144,9 @@ As of version 1.9:
 		</ul>
 	</li>
 	<li>Single variable evaluation (include "x" in the expression string)</li>
+</ul>
+<h3>Algebra and Calculus</h3>
+<ul>
+	<li>Create the derivative of an expression</li>
+	<li>Simplify an expression</li>
 </ul>
