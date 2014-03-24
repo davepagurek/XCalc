@@ -122,7 +122,7 @@ Make sure to run `XCalc.clearErrors()` to reset `XCalc.hasErrors()`. Otherwise, 
 	<li>Scroll on the graph to zoom in and out</li>
 </ul>
 <h3>Operations Supported</h3>
-As of version 1.9:
+As of version 1.9.3.8:
 <ul>
 	<li>Addition (x+y)</li>
 	<li>Subtraction (x-y)</li>
@@ -141,6 +141,12 @@ As of version 1.9:
 			<li>log</li>
 			<li>ln</li>
 			<li>sqrt</li>
+		</ul>
+	</li>
+    <li>The following constants:
+		<ul>
+			<li>e</li>
+			<li>pi</li>
 		</ul>
 	</li>
 	<li>Single variable evaluation (include "x" in the expression string)</li>

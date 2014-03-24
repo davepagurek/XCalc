@@ -59,6 +59,30 @@ function MathFunction(input) {
   };
 }
 
+//Class for constants
+function MathConstant(input) {
+  this.c=input;
+  if (!input) {
+    XCalc.log("Math function has no input.");
+  }
+
+  this.solve = function() {
+    if (this.c=="pi") {
+      return new Segment(Math.PI);
+    } else if (this.c=="e") {
+      return new Segment(Math.E);
+    }
+  };
+  
+  this.prettyC = function() {
+    if (this.c=="pi") {
+      return "&pi;";
+    } else if (this.c=="e") {
+      return "e";
+    }
+  };
+}
+
 //Class for a segment of math (a container)
 function Segment(input) {
   this.sections = [];
@@ -66,6 +90,7 @@ function Segment(input) {
   this.operator=0;
   this.coefficient=0;
   this.mathFunction=0;
+  this.mathConstant=0;
   this.variable="";
 
   var removeBrackets = function(value) {
@@ -274,6 +299,20 @@ function Segment(input) {
       }
     }
   };
+  
+  this.containsConstant = function() {
+    if (this.type=="constant") {
+      return true;
+    } else if (this.type=="value") {
+      return false;
+    } else {
+      if (this.sections.length==1) {
+        return this.sections[0].containsConstant();
+      } else if (this.sections.length==2) {
+        return this.sections[0].containsConstant() || this.sections[1].containsConstant();
+      }
+    }
+  };
 
   this.equals = function(expression) {
     if (this.type != expression.type) {
@@ -283,6 +322,8 @@ function Segment(input) {
         return (this.mathFunction.f==expression.mathFunction.f && this.sections[0].equals(expression.sections[0]));
       } else if (this.type=="variable") {
         return (this.variable==expression.variable && this.coefficient==expression.coefficient);
+      } else if (this.type=="constant") {
+        return (this.mathConstant.c==expression.mathConstant.c);
       } else if (this.type=="value") {
         return this.coefficient==expression.coefficient;
       } else if (this.type=="section") {
@@ -302,6 +343,8 @@ function Segment(input) {
       return this;
     } else if (this.type=="variable") {
       return new Segment(x);
+    } else if (this.type=="constant") {
+      return this.mathConstant.solve();
     } else if (this.type=="function") {
       return this.mathFunction.solve(this.sections[0].solve(x));
     } else {
@@ -465,7 +508,7 @@ function Segment(input) {
       }
 
     //If it can be simplified to a value, simplify
-    } else if (expression.type!="variable") {
+    } else if (expression.type!="variable" && (!expression.containsConstant() || expression.result()%1===0)) {
       expression.coefficient = expression.result();
       expression.type="value";
     }
@@ -485,7 +528,7 @@ function Segment(input) {
 
     if (expression.type=="variable") {
       deriv.coefficient = 1;
-    } else if (expression.type == "value" || !expression.containsX()) {
+    } else if (expression.type == "value" || expression.type=="constant" || !expression.containsX()) {
       deriv.coefficient = 0;
     } else if (expression.type=="section" && expression.operator.operator!="^") {
 
@@ -759,6 +802,8 @@ function Segment(input) {
       str += this.coefficient;
     } else if (this.type=="variable") {
       str += "x";
+    } else if (this.type=="constant") {
+      str += this.mathConstant.c;
     } else if (this.type=="function") {
       str += this.mathFunction.f + "(" + this.sections[0].formula() + ")";
     } else if (this.type=="section") {
@@ -790,6 +835,8 @@ function Segment(input) {
       str += this.coefficient;
     } else if (this.type=="variable") {
       str += "x";
+    } else if (this.type=="constant") {
+      str += this.mathConstant.prettyC();
     } else if (this.type=="function") {
       str += this.mathFunction.f + "(" + this.sections[0].prettyFormula() + ")";
     } else if (this.type=="section") {
@@ -845,6 +892,8 @@ function Segment(input) {
       var log = findLast("log", input);
       var ln = findLast("ln", input);
       var sqrt = findLast("sqrt", input);
+      var e = findLast("e", input);
+      var pi = findLast("pi", input);
       var multiplication = findLast("*", input);
       var multiplication2 = findMultiplicationBrackets(input); //Find brackets that are the same as multiplication
       var xMultiplication = findLast("x", input);
@@ -863,6 +912,8 @@ function Segment(input) {
       if (ln>multiplication && (ln===0 || operators.indexOf(input.substr(ln-1, 1))==-1)) functionMultiplication=ln;
       if (sqrt>multiplication && (sqrt===0 || operators.indexOf(input.substr(sqrt-1, 1))==-1)) functionMultiplication=sqrt;
       if (xMultiplication>multiplication && (xMultiplication===0 || operators.indexOf(input.substr(xMultiplication-1, 1))==-1)) functionMultiplication=xMultiplication;
+      if (e>multiplication && (e===0 || operators.indexOf(input.substr(e-1, 1))==-1)) functionMultiplication=e;
+      if (pi>multiplication && (pi===0 || operators.indexOf(input.substr(pi-1, 1))==-1)) functionMultiplication=e;
 
       //Push back each half of the equation into a section, in reverse order of operations
       if (addition != -1 && addition>subtraction) {
@@ -952,6 +1003,25 @@ function Segment(input) {
         } else {
           XCalc.log("Brackets nesting error: " + input);
         }
+        
+      } else if (e != -1 && e>pi) {
+        if (e>0) {
+          this.sections.push(new Segment(input.substring(0, e)));
+          this.sections.push(new Segment("e"));
+          this.operator=new Operator("*");
+        } else {
+          this.mathConstant = new MathConstant("e");
+          this.type="constant";
+        }
+      } else if (pi != -1) {
+        if (pi>0) {
+          this.sections.push(new Segment(input.substring(0, pi)));
+          this.sections.push(new Segment("pi"));
+          this.operator=new Operator("*");
+        } else {
+          this.mathConstant = new MathConstant("pi");
+          this.type="constant";
+        }
 
       //If there are no operators, just push the input itself
       } else {
@@ -977,6 +1047,7 @@ function Segment(input) {
       this.coefficient = input.coefficient;
       this.operator = input.operator;
       this.mathFunction = input.mathFunction;
+      this.mathConstant = input.mathConstant;
       this.variable = input.variable;
       this.type=input.type;
       this.sections=[];
