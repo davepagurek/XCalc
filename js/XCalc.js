@@ -363,7 +363,7 @@ function Segment(input) {
 
   this.simplify = function() {
     var expression = new Segment(this);
-    var final;
+    var finalExpression;
 
     //If the segment is a variable, leave it as is.
     //If it contains a variable in its subsections, simplify subsections
@@ -407,61 +407,61 @@ function Segment(input) {
             expression.sections[1]=exponent;
             expression.operator = new Operator("^");
           } else if (expression.sections[0].type=="section" && expression.sections[0].operator.operator=="*") {
-            final = new Segment(0);
-            final.operator = new Operator("*");
-            final.type="section";
+            finalExpression = new Segment(0);
+            finalExpression.operator = new Operator("*");
+            finalExpression.type="section";
             if (!expression.sections[0].sections[1].containsX()) {
               if (expression.sections[0].sections[0].containsX()) {
-                final.sections.push(expression.sections[0].sections[0]);
-                final.sections.push(expression.sections[1]);
+                finalExpression.sections.push(expression.sections[0].sections[0]);
+                finalExpression.sections.push(expression.sections[1]);
                 expression.sections[0]=expression.sections[0].sections[1];
-                expression.sections[1]=final;
+                expression.sections[1]=finalExpression;
               } else {
-                final.sections.push(expression.sections[0].sections[1]);
-                final.sections.push(expression.sections[1]);
+                finalExpression.sections.push(expression.sections[0].sections[1]);
+                finalExpression.sections.push(expression.sections[1]);
                 expression.sections[0]=expression.sections[0].sections[0];
-                expression.sections[1]=final;
+                expression.sections[1]=finalExpression;
               }
             } else if (!expression.sections[0].sections[0].containsX()) {
               if (expression.sections[0].sections[1].containsX()) {
-                final.sections.push(expression.sections[0].sections[1]);
-                final.sections.push(expression.sections[1]);
+                finalExpression.sections.push(expression.sections[0].sections[1]);
+                finalExpression.sections.push(expression.sections[1]);
                 expression.sections[0]=expression.sections[0].sections[0];
-                expression.sections[1]=final;
+                expression.sections[1]=finalExpression;
               } else {
-                final.sections.push(expression.sections[0].sections[0]);
-                final.sections.push(expression.sections[1]);
+                finalExpression.sections.push(expression.sections[0].sections[0]);
+                finalExpression.sections.push(expression.sections[1]);
                 expression.sections[0]=expression.sections[0].sections[1];
-                expression.sections[1]=final;
+                expression.sections[1]=finalExpression;
               }
             }
           } else if (expression.sections[1].type=="section" && expression.sections[1].operator.operator=="*") {
-            final = new Segment(0);
-            final.operator = new Operator("*");
-            final.type="section";
+            finalExpression = new Segment(0);
+            finalExpression.operator = new Operator("*");
+            finalExpression.type="section";
             if (!expression.sections[1].sections[1].containsX()) {
               if (expression.sections[1].sections[0].containsX()) {
-                final.sections.push(expression.sections[1].sections[0]);
-                final.sections.push(expression.sections[0]);
+                finalExpression.sections.push(expression.sections[1].sections[0]);
+                finalExpression.sections.push(expression.sections[0]);
                 expression.sections[1]=expression.sections[1].sections[1];
-                expression.sections[0] = final;
+                expression.sections[0] = finalExpression;
               } else {
-                final.sections.push(expression.sections[1].sections[1]);
-                final.sections.push(expression.sections[0]);
+                finalExpression.sections.push(expression.sections[1].sections[1]);
+                finalExpression.sections.push(expression.sections[0]);
                 expression.sections[1]=expression.sections[1].sections[0];
-                expression.sections[0] = final;
+                expression.sections[0] = finalExpression;
               }
             } else if (!expression.sections[1].sections[0].containsX()) {
               if (expression.sections[1].sections[1].containsX()) {
-                final.sections.push(expression.sections[1].sections[1]);
-                final.sections.push(expression.sections[0]);
+                finalExpression.sections.push(expression.sections[1].sections[1]);
+                finalExpression.sections.push(expression.sections[0]);
                 expression.sections[1]=(expression.sections[1].sections[0]);
-                expression.sections[0] = final;
+                expression.sections[0] = finalExpression;
               } else {
-                final.sections.push(expression.sections[1].sections[0]);
-                final.sections.push(expression.sections[0]);
+                finalExpression.sections.push(expression.sections[1].sections[0]);
+                finalExpression.sections.push(expression.sections[0]);
                 expression.sections[1]=(expression.sections[1].sections[1]);
-                expression.sections[0] = final;
+                expression.sections[0] = finalExpression;
               }
             }
           }
