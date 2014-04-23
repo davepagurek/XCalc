@@ -1149,7 +1149,7 @@ var XCalc = (function() {
       points = [];
       for (var i=x1; i<=x2; i+=accuracy) {
         points.push(new Point(i, this.expression.result(i)));
-        if ((points[points.length-1].y!==0 && !points[points.length-1].y) || Math.abs(points[points.length-1].y)>10000) {
+        if ((points[points.length-1].y!==0 && !points[points.length-1].y) || Math.abs(points[points.length-1].y)>1000000) {
           points[points.length-1].y=undefined;
         }
       }
@@ -1157,7 +1157,7 @@ var XCalc = (function() {
       min=undefined;
 
       if (autoRange) {
-        if (this.getMax()-this.getMin()>100000) {
+        if (this.getMax()-this.getMin()>1000000) {
           y1=-100;
           y2=100;
         } else {
