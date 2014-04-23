@@ -40,16 +40,16 @@ function simplifyText(event) {
     var derivative;
     var derivativeGraph;
 
-    if (derive) {
-      derivative = inputFunction.derive();
-      derivativeGraph = XCalc.graphExpression(derivative, width, Math.round(width*0.6), x1, x2, y1, y2);
-      graph = XCalc.graphExpression(inputFunction, width, Math.round(width*0.6), x1, x2, y1, y2);
-    } else {
-      graph = XCalc.graphExpression(inputFunction, width, Math.round(width*0.8), x1, x2, y1, y2);
-    }
-
     //If there are no errors, show the graph
     if (!XCalc.hasErrors()) {
+      if (derive) {
+        derivative = inputFunction.derive();
+        derivativeGraph = XCalc.graphExpression(derivative, width, Math.round(width*0.6), x1, x2, y1, y2);
+        graph = XCalc.graphExpression(inputFunction, width, Math.round(width*0.6), x1, x2, y1, y2);
+      } else {
+        graph = XCalc.graphExpression(inputFunction, width, Math.round(width*0.8), x1, x2, y1, y2);
+      }
+      
       if (derive) {
         var derivativeFormula = document.createElement("div");
         derivativeFormula.className = "formula";
