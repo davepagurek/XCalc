@@ -1102,17 +1102,22 @@ var XCalc = (function() {
     var timer=0;
     var distX=0;
     var distY=0;
-    var maxCurvature = 1.5;
 
     //Gets minimum y value in the set of points
-    this.getMin = function() {
+    this.getMin = function(slopes) {
       if (min===undefined) {
         if (points.length>0) {
           var i=0;
-          while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
+          while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity || (slopes && !checkCurvature(i-1))) i++;
           var _min = points[i].y;
           for (i++; i<points.length; i++) {
-            if (points[i].y<_min) _min = points[i].y;
+            if (!isNaN(points[i].y) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && points[i].y<_min) {
+              if (!slopes) {
+                _min = points[i].y;
+              } else if (checkCurvature(i-1)) {
+                _min = points[i].y;
+              }
+            }
           }
           min=_min;
           return min;
@@ -1125,14 +1130,20 @@ var XCalc = (function() {
     };
 
     //Gets maximum y value in the set of points
-    this.getMax = function() {
+    this.getMax = function(slopes) {
       if (max===undefined) {
         if (points.length>0) {
           var i=0;
-          while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
+          while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity || (slopes && !checkCurvature(i-1))) i++;
           var _max = points[i].y;
           for (i++; i<points.length; i++) {
-            if (points[i].y>_max) _max = points[i].y;
+            if (!isNaN(points[i].y) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && points[i].y>_max) {
+              if (!slopes) {
+                _max = points[i].y;
+              } else if (checkCurvature(i-1)) {
+                _max = points[i].y;
+              }
+            }
           }
           max=_max;
           return max;
@@ -1144,10 +1155,20 @@ var XCalc = (function() {
       }
     };
     
+    var checkCurvature = function(i) {
+      return (points[i-1] && Math.pow((points[i].y-points[i-1].y)/(y2-y1)*canvas.height, 2) + Math.pow((points[i].x-points[i-1].x)/(points[points.length-1].x-points[0].x)*canvas.width, 2)<=3);
+    }.bind(this);
+    
     var addDetail = function(i) {
-      if (Math.abs((points[i+1].x-points[i].x)/(points[points.length-1].x-points[0].x))*canvas.width>=0.001 && (points[i].y===undefined || isNaN(points[i].y) || Math.abs(points[i].y) == Infinity || (points[i-1] && Math.abs((points[i].y-points[i-1].y) - (points[i+1].y-points[i].y))>=Math.pow(10, maxCurvature)))) {
+      while (Math.abs((points[i+1].x-points[i].x)/(points[points.length-1].x-points[0].x))*canvas.width>=0.0001 && (((points[i].y===undefined || isNaN(points[i].y) || Math.abs(points[i].y) == Infinity) && !(points[i+1].y===undefined || isNaN(points[i+1].y) || Math.abs(points[i+1].y) == Infinity)) || !checkCurvature(i))) {
+        var good=true;
         var newP = new Point((points[i].x+points[i+1].x)/2, this.expression.result((points[i].x+points[i+1].x)/2));
+        if (newP.y!==undefined && Math.abs(newP.y)>10000) {
+          newP.y=undefined;
+          good=false;
+        }
         points.splice(i+1, 0, newP);
+        if (!good) break;
       }
     }.bind(this);
 
@@ -1157,7 +1178,7 @@ var XCalc = (function() {
       points = [];
       for (var i=x1; i<=x2; i+=accuracy) {
         points.push(new Point(i, this.expression.result(i)));
-        if ((points[points.length-1].y!==0 && !points[points.length-1].y) || Math.abs(points[points.length-1].y)>100000000) {
+        if (points[points.length-1].y!==undefined && Math.abs(points[points.length-1].y)>100000) {
           points[points.length-1].y=undefined;
         }
       }
@@ -1166,20 +1187,28 @@ var XCalc = (function() {
       min=undefined;
 
       if (autoRange) {
-        if (this.getMax()-this.getMin()>100000000) {
+        if (this.getMax()-this.getMin()>100000) {
           y1=-100;
           y2=100;
         } else {
           y1=this.getMin()-5;
           y2=this.getMax()+5;
         }
+        console.log(y1, y2);
+        if (this.getMax(1)-this.getMin(1)>100000) {
+          y1=-100;
+          y2=100;
+        } else {
+          y1=this.getMin(1)-5;
+          y2=this.getMax(1)+5;
+        }
+        console.log(y1, y2);
         autoRange = false;
       }
       
       for (i=0; i<points.length-1; i++) {
         addDetail(i);
       }
-      console.log(points.length);
 
       this.redraw();
     };
@@ -1286,11 +1315,18 @@ var XCalc = (function() {
         while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
         graphStage.moveTo(((points[i].x+offsetX)/(points[points.length-1].x-points[0].x))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
         for (i++; i<points.length; i++) {
-          if ((points[i-2] && Math.abs((points[i-1].y-points[i-2].y) - (points[i].y-points[i-1].y))<Math.pow(10, maxCurvature)) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
+          if (checkCurvature(i-1) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
             graphStage.lineTo(((points[i].x+offsetX)/(points[points.length-1].x-points[0].x))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
           }
-          while (!(points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y))) i++;
-          graphStage.moveTo(((points[i].x+offsetX)/(points[points.length-1].x-points[0].x))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+          var moved=false;
+          /*while (!(points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y))) {
+            i++;
+            moved=true;
+          }*/
+          if ((points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y))) {
+            graphStage.moveTo(((points[i].x+offsetX)/(points[points.length-1].x-points[0].x))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+          }
+          //if (moved) i--;
           //} else {
             
           //}
