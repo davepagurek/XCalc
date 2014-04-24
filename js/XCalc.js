@@ -1102,6 +1102,7 @@ var XCalc = (function() {
     var timer=0;
     var distX=0;
     var distY=0;
+    var maxCurvature = 1.5;
 
     //Gets minimum y value in the set of points
     this.getMin = function() {
@@ -1142,6 +1143,13 @@ var XCalc = (function() {
         return max;
       }
     };
+    
+    var addDetail = function(i) {
+      if (Math.abs((points[i+1].x-points[i].x)/(points[points.length-1].x-points[0].x))*canvas.width>=0.001 && (points[i].y===undefined || isNaN(points[i].y) || Math.abs(points[i].y) == Infinity || (points[i-1] && Math.abs((points[i].y-points[i-1].y) - (points[i+1].y-points[i].y))>=Math.pow(10, maxCurvature)))) {
+        var newP = new Point((points[i].x+points[i+1].x)/2, this.expression.result((points[i].x+points[i+1].x)/2));
+        points.splice(i+1, 0, newP);
+      }
+    }.bind(this);
 
     //Updates the points and graph
     this.update = function() {
@@ -1149,15 +1157,16 @@ var XCalc = (function() {
       points = [];
       for (var i=x1; i<=x2; i+=accuracy) {
         points.push(new Point(i, this.expression.result(i)));
-        if ((points[points.length-1].y!==0 && !points[points.length-1].y) || Math.abs(points[points.length-1].y)>1000000) {
+        if ((points[points.length-1].y!==0 && !points[points.length-1].y) || Math.abs(points[points.length-1].y)>100000000) {
           points[points.length-1].y=undefined;
         }
       }
+      
       max=undefined;
       min=undefined;
 
       if (autoRange) {
-        if (this.getMax()-this.getMin()>1000000) {
+        if (this.getMax()-this.getMin()>100000000) {
           y1=-100;
           y2=100;
         } else {
@@ -1166,6 +1175,11 @@ var XCalc = (function() {
         }
         autoRange = false;
       }
+      
+      for (i=0; i<points.length-1; i++) {
+        addDetail(i);
+      }
+      console.log(points.length);
 
       this.redraw();
     };
@@ -1258,6 +1272,7 @@ var XCalc = (function() {
         graphStage.lineCap="round";
 
         var offsetY = -y1;
+        var offsetX = -points[0].x;
 
         drawAxes(x1, x2, y1, y2);
 
@@ -1269,16 +1284,16 @@ var XCalc = (function() {
         //Find the first point that exists
         var i=0;
         while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
-        graphStage.moveTo((i/points.length)*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+        graphStage.moveTo(((points[i].x+offsetX)/(points[points.length-1].x-points[0].x))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
         for (i++; i<points.length; i++) {
-          if (Math.abs((canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height)-(canvas.height-((points[i-1].y+offsetY)/(y2-y1))*canvas.height))<=canvas.height && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
-            graphStage.lineTo((i/(points.length-1))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+          if ((points[i-2] && Math.abs((points[i-1].y-points[i-2].y) - (points[i].y-points[i-1].y))<Math.pow(10, maxCurvature)) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
+            graphStage.lineTo(((points[i].x+offsetX)/(points[points.length-1].x-points[0].x))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
           }
-          if (points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
-            graphStage.moveTo((i/(points.length-1))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
-          } else {
-            graphStage.moveTo((i/(points.length-1))*canvas.width, canvas.height-((0+offsetY)/(y2-y1))*canvas.height);
-          }
+          while (!(points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y))) i++;
+          graphStage.moveTo(((points[i].x+offsetX)/(points[points.length-1].x-points[0].x))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
+          //} else {
+            
+          //}
         }
         graphStage.closePath();
         graphStage.stroke();
@@ -1392,29 +1407,38 @@ var XCalc = (function() {
         var offsetY = -y1;
 
         //Check if the function exists at that x value
-        if (points[Math.round(mousePos.x/canvas.width*points.length)].y===0 || points[Math.round(mousePos.x/canvas.width*points.length)].y) {
+        var index=-1;
+        var dist=-1;
+        for (var i=0; i<points.length; i++) {
+          if (dist==-1 || dist > Math.pow(((points[i].x-points[0].x)/(points[points.length-1].x-points[0].x))*canvas.width-mousePos.x, 2) + Math.pow(canvas.height-((points[i].y-y1)/(y2-y1))*canvas.height-mousePos.y, 2)) {
+            index = i;
+            dist = Math.pow(((points[i].x-points[0].x)/(points[points.length-1].x-points[0].x))*canvas.width-mousePos.x, 2) + Math.pow(canvas.height-((points[i].y-y1)/(y2-y1))*canvas.height-mousePos.y, 2);
+          }
+        }
+        
+        if (points[index].y===0 || points[index].y) {
 
           //Draw the coordinate
           stage.fillStyle="#2980b9";
           stage.beginPath();
-          stage.arc(mousePos.x, canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height, 4, 0, 2*Math.PI);
+          stage.arc(((points[index].x-points[0].x)/(points[points.length-1].x-points[0].x))*canvas.width, canvas.height-((points[index].y+offsetY)/(y2-y1))*canvas.height, 4, 0, 2*Math.PI);
           stage.closePath();
           stage.fill();
           stage.fillStyle="#000";
           stage.strokeStyle="#FFF";
           stage.lineWidth=4;
           stage.textBaseline="alphabetic";
-          var txt="(" + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].x*100)/100).toFixed(2) + ", " + (Math.round(points[Math.round(mousePos.x/canvas.width*points.length)].y*100)/100).toFixed(2) + ")";
+          var txt="(" + (Math.round(points[index].x*100)/100).toFixed(2) + ", " + (Math.round(points[index].y*100)/100).toFixed(2) + ")";
 
-          if (mousePos.x<stage.measureText(txt).width/2+2) {
+          if (((points[index].x-points[0].x)/(points[points.length-1].x-points[0].x))*canvas.width<stage.measureText(txt).width/2+2) {
             stage.textAlign = "left";
-          } else if (mousePos.x>canvas.width-stage.measureText(txt).width/2-2) {
+          } else if (((points[index].x-points[0].x)/(points[points.length-1].x-points[0].x))*canvas.width>canvas.width-stage.measureText(txt).width/2-2) {
             stage.textAlign = "right";
           } else {
             stage.textAlign = "center";
           }
-          stage.strokeText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
-          stage.fillText(txt, mousePos.x, -10+canvas.height-((points[Math.round(mousePos.x/canvas.width*points.length)].y+offsetY)/(y2-y1))*canvas.height);
+          stage.strokeText(txt, ((points[index].x-points[0].x)/(points[points.length-1].x-points[0].x))*canvas.width, -10+canvas.height-((points[index].y+offsetY)/(y2-y1))*canvas.height);
+          stage.fillText(txt, ((points[index].x-points[0].x)/(points[points.length-1].x-points[0].x))*canvas.width, -10+canvas.height-((points[index].y+offsetY)/(y2-y1))*canvas.height);
         }
       }
     }.bind(this);
