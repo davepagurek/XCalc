@@ -1102,21 +1102,36 @@ var XCalc = (function() {
     var timer=0;
     var distX=0;
     var distY=0;
+    var firstDeriv;
 
     //Gets minimum y value in the set of points
-    this.getMin = function(avgY, avgDev) {
+    this.getMin = function(zeroes) {
       if (min===undefined) {
-        if (points.length>0) {
-          var i=0;
+        var i=0;
+        var _min;
+        
+        //Find minimum y value of points where the slope is approximately 0
+        if (zeroes && zeroes.length>0) {
+          while (i<zeroes.length && points[zeroes[i].x] === undefined) i++;
+          if (i>=zeroes.length) {
+            return 0;
+          }
+          _min = points[zeroes[i].x].y;
+          for (++i; i<zeroes.length; i++) {
+            if (points[zeroes[i].x] !== undefined && points[zeroes[i].x].y<_min) {
+              _min = points[zeroes[i].x].y;
+            }
+          }
+          min=_min;
+          return min;
+          
+        //Otherwise, find the min of the given points normally
+        } else if (points.length>0) {
           while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
-          var _min = points[i].y;
-          for (i++; i<points.length; i++) {
+          _min = points[i].y;
+          for (++i; i<points.length; i++) {
             if (!isNaN(points[i].y) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && points[i].y<_min) {
-              if (!avgY || !avgDev) {
-                _min = points[i].y;
-              } else if (Math.abs(Math.abs(points[i].y-avgY)-avgDev)<0.5*avgDev) {
-                _min = points[i].y;
-              }
+              _min = points[i].y;
             }
           }
           min=_min;
@@ -1130,19 +1145,31 @@ var XCalc = (function() {
     };
 
     //Gets maximum y value in the set of points
-    this.getMax = function(avgY, avgDev) {
+    this.getMax = function(zeroes) {
       if (max===undefined) {
-        if (points.length>0) {
-          var i=0;
+        var i=0;
+        var _max;
+        
+        //Find maximum y value of points where the slope is approximately 0
+        if (zeroes && zeroes.length>0) {
+          while (i<=zeroes.length && points[zeroes[i].x] === undefined) i++;
+          if (i>=zeroes.length) return 0;
+          _max = points[zeroes[i].x].y;
+          for (++i; i<zeroes.length; i++) {
+            if (points[zeroes[i].x] !== undefined && points[zeroes[i].x].y>_max) {
+              _max = points[zeroes[i].x].y;
+            }
+          }
+          max=_max;
+          return max;
+          
+        //Otherwise, find the max of the given points normally
+        } else if (points.length>0) {
           while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
-          var _max = points[i].y;
-          for (i++; i<points.length; i++) {
+          _max = points[i].y;
+          for (++i; i<points.length; i++) {
             if (!isNaN(points[i].y) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && points[i].y>_max) {
-              if (!avgY || !avgDev) {
-                _max = points[i].y;
-              } else if (Math.abs(Math.abs(points[i].y-avgY)-avgDev)<0.5*avgDev) {
-                _max = points[i].y;
-              }
+              _max = points[i].y;
             }
           }
           max=_max;
@@ -1155,12 +1182,16 @@ var XCalc = (function() {
       }
     };
     
+    //See if the distance between adjacent points is small enough to be graphable
     var checkCurvature = function(i) {
       return (points[i-1] && Math.pow((points[i].y-points[i-1].y)/(y2-y1)*canvas.height, 2) + Math.pow((points[i].x-points[i-1].x)/(points[points.length-1].x-points[0].x)*canvas.width, 2)<=3);
     }.bind(this);
     
+    //Add points in between existing points
     var addDetail = function(i) {
-      while (Math.abs((points[i+1].x-points[i].x)/(points[points.length-1].x-points[0].x))*canvas.width>=0.025 && !((!(points[i].y===undefined || isNaN(points[i].y) || Math.abs(points[i].y) == Infinity) && !(points[i+1].y===undefined || isNaN(points[i+1].y) || Math.abs(points[i+1].y) == Infinity)) && (points[i].y>y2 || points[i].y<y1) && (points[i+1].y>y2 || points[i+1].y<y1)) && (((points[i].y===undefined || isNaN(points[i].y) || Math.abs(points[i].y) == Infinity) && !(points[i+1].y===undefined || isNaN(points[i+1].y) || Math.abs(points[i+1].y) == Infinity)) || !checkCurvature(i))) {
+      
+      //Next to undefined points or next to points where the curvature is too big, add a point in between as long as the distance between the x values isn't too small
+      while (Math.abs((points[i+1].x-points[i].x)/(points[points.length-1].x-points[0].x))*canvas.width>=0.03 && !((!(points[i].y===undefined || isNaN(points[i].y) || Math.abs(points[i].y) == Infinity) && !(points[i+1].y===undefined || isNaN(points[i+1].y) || Math.abs(points[i+1].y) == Infinity)) && (points[i].y>y2 || points[i].y<y1) && (points[i+1].y>y2 || points[i+1].y<y1)) && (((points[i].y===undefined || isNaN(points[i].y) || Math.abs(points[i].y) == Infinity) && !(points[i+1].y===undefined || isNaN(points[i+1].y) || Math.abs(points[i+1].y) == Infinity)) || !checkCurvature(i))) {
         var good=true;
         var newP = new Point((points[i].x+points[i+1].x)/2, this.expression.result((points[i].x+points[i+1].x)/2));
         if (newP.y!==undefined && Math.abs(newP.y)>10000) {
@@ -1187,28 +1218,24 @@ var XCalc = (function() {
       min=undefined;
 
       if (autoRange) {
-        var avgY = 0;
-        var avgDev = 0;
-        var totalPoints = 0;
-        for (i=0; i<points.length; i++) {
-          if (!isNaN(points[i].y) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity) {
-            totalPoints++;
-            avgY += points[i].y;
+        
+        //Find approximate zeroes of the first derivative
+        var zeroes = [];
+        var index=0;
+        for (i=x1; i<=x2; i+=accuracy*2) {
+          var slope = firstDeriv.result(i);
+          if (slope !== undefined && Math.abs(slope)<10) {            
+            zeroes.push(new Point(index, slope));
           }
+          index+=2;
         }
-        avgY = avgY/totalPoints;
-        for (i=0; i<points.length; i++) {
-          if (!isNaN(points[i].y) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity) {
-            avgDev += Math.abs(points[i].y-avgY);
-          }
-        }
-        avgDev=avgDev/totalPoints;
-        if (this.getMax(avgY, avgDev)-this.getMin(avgY, avgDev)>100000) {
+        
+        if (this.getMax(zeroes)-this.getMin(zeroes)>100000) {
           y1=-100;
           y2=100;
         } else {
-          y1=this.getMin(avgY, avgDev)-5;
-          y2=this.getMax(avgY, avgDev)+5;
+          y1=this.getMin(zeroes)-5;
+          y2=this.getMax(zeroes)+5;
         }
         autoRange = false;
       }
@@ -1322,21 +1349,16 @@ var XCalc = (function() {
         while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
         graphStage.moveTo(((points[i].x+offsetX)/(points[points.length-1].x-points[0].x))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
         for (i++; i<points.length; i++) {
+          
+          //Only draw the line segment if the curvature is small enough
           if (checkCurvature(i-1) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y)) {
             graphStage.lineTo(((points[i].x+offsetX)/(points[points.length-1].x-points[0].x))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
           }
-          var moved=false;
-          /*while (!(points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y))) {
-            i++;
-            moved=true;
-          }*/
+          
+          //Move to the next point
           if ((points[i].y !== undefined && Math.abs(points[i].y) != Infinity && !isNaN(points[i].y))) {
             graphStage.moveTo(((points[i].x+offsetX)/(points[points.length-1].x-points[0].x))*canvas.width, canvas.height-((points[i].y+offsetY)/(y2-y1))*canvas.height);
           }
-          //if (moved) i--;
-          //} else {
-            
-          //}
         }
         graphStage.closePath();
         graphStage.stroke();
@@ -1401,7 +1423,7 @@ var XCalc = (function() {
       var newy2 = y2+((mousePos.y-startMouse.y)/canvas.height)*(y2-y1);
 
       //If it's been dragged far enough, recalculate the line
-      if (Math.abs(mousePos.x-startMouse.x)>canvas.width*0.2 || Math.abs(mousePos.y-startMouse.y)>canvas.height*0.2) {
+      if (Math.abs(mousePos.x-startMouse.x)>canvas.width*0.8 || Math.abs(mousePos.y-startMouse.y)>canvas.height*0.8) {
         redrawLine();
 
       //Otherwise, move around the drawing we already have
@@ -1549,6 +1571,8 @@ var XCalc = (function() {
       canvas.style.backgroundColor="#FFF";
 
       graphStage = graphCanvas.getContext("2d");
+      
+      firstDeriv = this.expression.derive();
 
       //Make points
       this.update();
