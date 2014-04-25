@@ -1104,17 +1104,17 @@ var XCalc = (function() {
     var distY=0;
 
     //Gets minimum y value in the set of points
-    this.getMin = function(slopes) {
+    this.getMin = function(avgY, avgDev) {
       if (min===undefined) {
         if (points.length>0) {
           var i=0;
-          while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity || (slopes && !checkCurvature(i-1))) i++;
+          while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
           var _min = points[i].y;
           for (i++; i<points.length; i++) {
             if (!isNaN(points[i].y) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && points[i].y<_min) {
-              if (!slopes) {
+              if (!avgY || !avgDev) {
                 _min = points[i].y;
-              } else if (checkCurvature(i-1)) {
+              } else if (Math.abs(Math.abs(points[i].y-avgY)-avgDev)<0.5*avgDev) {
                 _min = points[i].y;
               }
             }
@@ -1130,17 +1130,17 @@ var XCalc = (function() {
     };
 
     //Gets maximum y value in the set of points
-    this.getMax = function(slopes) {
+    this.getMax = function(avgY, avgDev) {
       if (max===undefined) {
         if (points.length>0) {
           var i=0;
-          while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity || (slopes && !checkCurvature(i-1))) i++;
+          while (isNaN(points[i].y) || points[i].y === undefined || Math.abs(points[i].y) == Infinity) i++;
           var _max = points[i].y;
           for (i++; i<points.length; i++) {
             if (!isNaN(points[i].y) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity && points[i].y>_max) {
-              if (!slopes) {
+              if (!avgY || !avgDev) {
                 _max = points[i].y;
-              } else if (checkCurvature(i-1)) {
+              } else if (Math.abs(Math.abs(points[i].y-avgY)-avgDev)<0.5*avgDev) {
                 _max = points[i].y;
               }
             }
@@ -1160,7 +1160,7 @@ var XCalc = (function() {
     }.bind(this);
     
     var addDetail = function(i) {
-      while (Math.abs((points[i+1].x-points[i].x)/(points[points.length-1].x-points[0].x))*canvas.width>=0.0001 && (((points[i].y===undefined || isNaN(points[i].y) || Math.abs(points[i].y) == Infinity) && !(points[i+1].y===undefined || isNaN(points[i+1].y) || Math.abs(points[i+1].y) == Infinity)) || !checkCurvature(i))) {
+      while (Math.abs((points[i+1].x-points[i].x)/(points[points.length-1].x-points[0].x))*canvas.width>=0.025 && !((!(points[i].y===undefined || isNaN(points[i].y) || Math.abs(points[i].y) == Infinity) && !(points[i+1].y===undefined || isNaN(points[i+1].y) || Math.abs(points[i+1].y) == Infinity)) && (points[i].y>y2 || points[i].y<y1) && (points[i+1].y>y2 || points[i+1].y<y1)) && (((points[i].y===undefined || isNaN(points[i].y) || Math.abs(points[i].y) == Infinity) && !(points[i+1].y===undefined || isNaN(points[i+1].y) || Math.abs(points[i+1].y) == Infinity)) || !checkCurvature(i))) {
         var good=true;
         var newP = new Point((points[i].x+points[i+1].x)/2, this.expression.result((points[i].x+points[i+1].x)/2));
         if (newP.y!==undefined && Math.abs(newP.y)>10000) {
@@ -1187,22 +1187,29 @@ var XCalc = (function() {
       min=undefined;
 
       if (autoRange) {
-        if (this.getMax()-this.getMin()>100000) {
+        var avgY = 0;
+        var avgDev = 0;
+        var totalPoints = 0;
+        for (i=0; i<points.length; i++) {
+          if (!isNaN(points[i].y) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity) {
+            totalPoints++;
+            avgY += points[i].y;
+          }
+        }
+        avgY = avgY/totalPoints;
+        for (i=0; i<points.length; i++) {
+          if (!isNaN(points[i].y) && points[i].y !== undefined && Math.abs(points[i].y) != Infinity) {
+            avgDev += Math.abs(points[i].y-avgY);
+          }
+        }
+        avgDev=avgDev/totalPoints;
+        if (this.getMax(avgY, avgDev)-this.getMin(avgY, avgDev)>100000) {
           y1=-100;
           y2=100;
         } else {
-          y1=this.getMin()-5;
-          y2=this.getMax()+5;
+          y1=this.getMin(avgY, avgDev)-5;
+          y2=this.getMax(avgY, avgDev)+5;
         }
-        console.log(y1, y2);
-        if (this.getMax(1)-this.getMin(1)>100000) {
-          y1=-100;
-          y2=100;
-        } else {
-          y1=this.getMin(1)-5;
-          y2=this.getMax(1)+5;
-        }
-        console.log(y1, y2);
         autoRange = false;
       }
       
