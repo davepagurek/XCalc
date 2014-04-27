@@ -1102,7 +1102,6 @@ var XCalc = (function() {
     var timer=0;
     var distX=0;
     var distY=0;
-    var firstDeriv;
 
     //Gets minimum y value in the set of points
     this.getMin = function(zeroes) {
@@ -1221,13 +1220,11 @@ var XCalc = (function() {
         
         //Find approximate zeroes of the first derivative
         var zeroes = [];
-        var index=0;
-        for (i=x1; i<=x2; i+=accuracy*2) {
-          var slope = firstDeriv.result(i);
-          if (slope !== undefined && Math.abs(slope)<10) {            
-            zeroes.push(new Point(index, slope));
+        for (i=0; i<points.length-1; i++) {
+          var slope = (points[i+1].y-points[i].y)/(points[i+1].x-points[i].x);
+          if (slope !== undefined && Math.abs(slope)<10) {         
+            zeroes.push(new Point(i, slope));
           }
-          index+=2;
         }
         
         if (this.getMax(zeroes)-this.getMin(zeroes)>100000) {
@@ -1571,8 +1568,6 @@ var XCalc = (function() {
       canvas.style.backgroundColor="#FFF";
 
       graphStage = graphCanvas.getContext("2d");
-      
-      firstDeriv = this.expression.derive();
 
       //Make points
       this.update();
