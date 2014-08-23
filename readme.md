@@ -1,5 +1,5 @@
 <h1>XCalc.js</h1>
-Mathematical Expression Calculator by Dave Pagurek. Live demo available at <a href="http://www.pahgawks.com/math/">http://www.pahgawks.com/math/</a>.
+Mathematical Expression Calculator by Dave Pagurek. Live demo available at <a href="http://www.davepagurek.com/math/">http://www.davepagurek.com/math/</a>.
 
 <h2>Files</h2>
 The XCalc release contains XCalc.js and XCalc.min.js. The minified script is smaller and fully functional for use. The uncompressed file is commented and to be used for editing and extending.
